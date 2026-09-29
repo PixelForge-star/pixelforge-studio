@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PixelForge — Multi-Tool Image Creative Studio</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            bg: '#080B12',
+                            secondary: '#0D1220',
+                            panel: '#111827',
+                            panelBorder: '#253148',
+                            blue: '#3B82F6',
+                            cyan: '#22D3EE',
+                            purple: '#8B5CF6',
+                            textPrimary: '#F8FAFC',
+                            textSecondary: '#94A3B8',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    boxShadow: {
+                        'glow-blue': '0 0 25px -5px rgba(59, 130, 246, 0.35)',
+                        'glow-cyan': '0 0 25px -5px rgba(34, 211, 238, 0.35)',
+                        'glow-purple': '0 0 25px -5px rgba(139, 92, 246, 0.35)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #080B12;
+            color: #F8FAFC;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        .bg-checkerboard {
+            background-color: #0d111c;
+            background-image: 
+                linear-gradient(45deg, #141b2d 25%, transparent 25%), 
+                linear-gradient(-45deg, #141b2d 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #141b2d 75%), 
+                linear-gradient(-45deg, transparent 75%, #141b2d 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #080B12;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #253148;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3B82F6;
+        }
+
+        .tool-card-hover {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .tool-card-hover:hover {
+            transform: translateY(-4px);
+            border-color: #3B82F6;
+            box-shadow: 0 10px 30px -10px rgba(59, 130, 246, 0.3);
+        }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            background: #1e293b;
+            border-radius: 8px;
+            height: 6px;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: #3B82F6;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+        }
+
+        .comparison-slider-wrapper {
+            position: relative;
+            user-select: none;
+            overflow: hidden;
+        }
+        .comparison-slider-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            overflow: hidden;
+            width: 50%;
+        }
+
+        /* Interactive Visual Crop Box Over Canvas */
+        #crop-overlay-box {
+            position: absolute;
+            border: 2px solid #22D3EE;
+            box-shadow: 0 0 0 9999px rgba(8, 11, 18, 0.65);
+            cursor: move;
+            box-sizing: border-box;
+            z-index: 30;
+        }
+        .crop-handle {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background-color: #22D3EE;
+            border: 2px solid #080B12;
+            border-radius: 2px;
+        }
+        .crop-handle-nw { top: -6px; left: -6px; cursor: nwse-resize; }
+        .crop-handle-ne { top: -6px; right: -6px; cursor: nesw-resize; }
+        .crop-handle-sw { bottom: -6px; left: -6px; cursor: nesw-resize; }
+        .crop-handle-se { bottom: -6px; right: -6px; cursor: nwse-resize; }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col justify-between selection:bg-brand-blue selection:text-white">
+
+    <!-- Global file upload input element -->
+    <input type="file" id="global-file-input" accept="image/*" class="hidden" onchange="handleFileSelect(event)">
+
+    <header class="sticky top-0 z-50 bg-[#080B12]/90 backdrop-blur-md border-b border-brand-panelBorder/70 transition-all duration-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            
+            <!-- Logo -->
+            <div class="flex items-center gap-3 cursor-pointer" onclick="switchPage('landing')">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-blue via-brand-cyan to-brand-purple p-[1.5px] flex items-center justify-center shadow-glow-blue">
+                    <div class="w-full h-full bg-brand-bg rounded-[10px] flex items-center justify-center">
+                        <i class="fa-solid fa-cube text-brand-cyan text-sm"></i>
+                    </div>
+                </div>
+                <div class="flex flex-col">
+                    <span class="font-extrabold text-lg tracking-tight text-white flex items-center gap-1.5">
+                        Pixel<span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-cyan to-brand-blue">Forge</span>
+                        <span class="text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded bg-brand-blue/20 text-brand-cyan border border-brand-blue/30">STUDIO</span>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Navbar Links -->
+            <nav class="hidden md:flex items-center gap-1 bg-brand-secondary/80 p-1 rounded-full border border-brand-panelBorder/60 text-xs font-medium">
+                <button onclick="switchPage('landing')" id="nav-btn-landing" class="px-3.5 py-1.5 rounded-full text-white bg-brand-panel border border-brand-panelBorder transition">
+                    Home
+                </button>
+                <button onclick="switchPage('directory')" id="nav-btn-directory" class="px-3.5 py-1.5 rounded-full text-brand-textSecondary hover:text-white transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-grid-2 text-brand-cyan"></i>
+                    <span>All Tools</span>
+                </button>
+                <button onclick="launchStudioTool('resize')" class="px-3.5 py-1.5 rounded-full text-brand-textSecondary hover:text-white transition">
+                    Resize
+                </button>
+                <button onclick="launchStudioTool('compress')" class="px-3.5 py-1.5 rounded-full text-brand-textSecondary hover:text-white transition">
+                    Compress
+                </button>
+                <button onclick="launchStudioTool('crop')" class="px-3.5 py-1.5 rounded-full text-brand-textSecondary hover:text-white transition">
+                    Crop
+                </button>
+                <button onclick="launchStudioTool('bgremove')" class="px-3.5 py-1.5 rounded-full text-brand-textSecondary hover:text-white transition">
+                    BG Remove
+                </button>
+                <button onclick="launchStudioTool('convert')" class="px-3.5 py-1.5 rounded-full text-brand-textSecondary hover:text-white transition">
+                    Convert
+                </button>
+            </nav>
+
+            <!-- Actions -->
+            <div class="flex items-center gap-3">
+                <button onclick="switchPage('editor')" id="nav-btn-editor" class="px-3 py-1.5 rounded-lg text-xs font-semibold border border-brand-panelBorder text-brand-textSecondary hover:text-white transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-sliders text-brand-purple"></i>
+                    <span class="hidden sm:inline">Studio Workspace</span>
+                </button>
+
+                <button onclick="triggerFileUpload()" class="relative inline-flex items-center justify-center p-0.5 overflow-hidden text-xs font-medium rounded-lg group bg-gradient-to-br from-brand-cyan via-brand-blue to-brand-purple text-white shadow-glow-blue transition">
+                    <span class="relative px-3.5 py-2 transition-all ease-in duration-75 bg-brand-bg rounded-md group-hover:bg-opacity-0 font-semibold flex items-center gap-2">
+                        <i class="fa-solid fa-upload text-brand-cyan group-hover:text-white"></i>
+                        <span>Upload</span>
+                    </span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow">
+        
+        <!-- ================= PAGE 1: FULL LANDING HOME VIEW ================= -->
+        <div id="page-landing" class="transition-all duration-300">
+            
+            <!-- Hero Section -->
+            <section class="relative pt-12 pb-20 overflow-hidden border-b border-brand-panelBorder/40">
+                <div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-gradient-to-tr from-brand-blue/15 via-brand-cyan/10 to-brand-purple/15 rounded-full blur-[120px] pointer-events-none"></div>
+
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                        
+                        <div class="lg:col-span-7 text-center lg:text-left">
+                            <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-panel border border-brand-panelBorder/80 mb-6 text-xs text-brand-cyan font-mono tracking-wider uppercase">
+                                <span class="w-2 h-2 rounded-full bg-brand-cyan animate-pulse"></span>
+                                Client-Side Multi-Tool Creative Suite
+                            </div>
+
+                            <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-[1.15] mb-6">
+                                Your Images. <br/>
+                                <span class="bg-gradient-to-r from-brand-cyan via-brand-blue to-brand-purple bg-clip-text text-transparent">
+                                    Perfectly Transformed.
+                                </span>
+                            </h1>
+
+                            <p class="text-brand-textSecondary text-base sm:text-lg max-w-2xl mx-auto lg:mx-0 mb-8 font-normal leading-relaxed">
+                                Professional image resizer, quality compressor, precision cropper, background remover, and multi-format converter running completely in your browser memory with zero server uploads.
+                            </p>
+
+                            <div class="flex flex-wrap items-center justify-center lg:justify-start gap-3">
+                                <button onclick="launchStudioTool('resize')" class="px-6 py-3 rounded-xl bg-gradient-to-r from-brand-blue to-brand-purple text-white font-semibold text-xs uppercase tracking-wider shadow-glow-blue transition flex items-center gap-2">
+                                    <i class="fa-solid fa-up-right-and-down-left-from-center"></i>
+                                    <span>Start Resizing</span>
+                                </button>
+                                <button onclick="switchPage('directory')" class="px-6 py-3 rounded-xl bg-brand-panel border border-brand-panelBorder text-brand-cyan font-semibold text-xs uppercase tracking-wider hover:border-brand-cyan transition flex items-center gap-2">
+                                    <i class="fa-solid fa-border-all"></i>
+                                    <span>Explore All Tools</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Dropzone Panel -->
+                        <div class="lg:col-span-5">
+                            <div id="hero-dropzone" 
+                                 onclick="triggerFileUpload()" 
+                                 ondragover="handleDragOver(event)" 
+                                 ondragleave="handleDragLeave(event)" 
+                                 ondrop="handleDrop(event)" 
+                                 class="relative bg-brand-panel/90 border-2 border-dashed border-brand-blue/40 rounded-2xl p-8 text-center hover:border-brand-cyan cursor-pointer transition-all group shadow-2xl bg-gradient-to-b from-brand-panel to-brand-secondary">
+                                <div class="w-16 h-16 mx-auto mb-5 rounded-2xl bg-brand-secondary border border-brand-panelBorder flex items-center justify-center text-brand-cyan group-hover:scale-110 group-hover:text-brand-blue transition-all shadow-glow-blue">
+                                    <i class="fa-solid fa-cloud-arrow-up text-2xl"></i>
+                                </div>
+                                <h3 class="text-lg font-bold text-white mb-2">Drag & Drop Image Here</h3>
+                                <p class="text-xs text-brand-textSecondary mb-6 max-w-xs mx-auto">
+                                    Supports JPG, PNG, WebP, AVIF, and GIF files.
+                                </p>
+                                <button class="w-full py-3 bg-brand-secondary group-hover:bg-brand-panelBorder/60 border border-brand-panelBorder rounded-xl text-white font-medium text-xs tracking-wider uppercase transition flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-folder-open text-brand-cyan"></i>
+                                    <span>Browse Local File</span>
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+
+            <!-- Resize Presets Chips Section -->
+            <section class="py-12 border-b border-brand-panelBorder/40 bg-brand-secondary/30">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="text-center mb-6">
+                        <span class="text-xs font-mono font-semibold uppercase text-brand-cyan tracking-widest">Instant Presets</span>
+                        <h2 class="text-xl font-bold text-white mt-1">Popular Social & Web Aspect Ratios</h2>
+                    </div>
+
+                    <div class="flex flex-wrap items-center justify-center gap-3">
+                        <button onclick="applyPresetAndLaunch(1080, 1080, 'Instagram Square')" class="px-4 py-3 rounded-xl bg-brand-panel border border-brand-panelBorder hover:border-brand-blue text-xs font-medium text-white flex items-center gap-2 transition group">
+                            <i class="fa-brands fa-instagram text-brand-purple group-hover:scale-110 transition"></i>
+                            <div class="text-left">
+                                <div class="font-bold">Instagram Square</div>
+                                <div class="text-[10px] text-brand-textSecondary font-mono">1080 × 1080 px</div>
+                            </div>
+                        </button>
+
+                        <button onclick="applyPresetAndLaunch(1080, 1350, 'Instagram Portrait')" class="px-4 py-3 rounded-xl bg-brand-panel border border-brand-panelBorder hover:border-brand-blue text-xs font-medium text-white flex items-center gap-2 transition group">
+                            <i class="fa-brands fa-instagram text-brand-cyan group-hover:scale-110 transition"></i>
+                            <div class="text-left">
+                                <div class="font-bold">Instagram Portrait</div>
+                                <div class="text-[10px] text-brand-textSecondary font-mono">1080 × 1350 px</div>
+                            </div>
+                        </button>
+
+                        <button onclick="applyPresetAndLaunch(1280, 720, 'YouTube Thumbnail')" class="px-4 py-3 rounded-xl bg-brand-panel border border-brand-panelBorder hover:border-brand-blue text-xs font-medium text-white flex items-center gap-2 transition group">
+                            <i class="fa-brands fa-youtube text-red-500 group-hover:scale-110 transition"></i>
+                            <div class="text-left">
+                                <div class="font-bold">YouTube Thumbnail</div>
+                                <div class="text-[10px] text-brand-textSecondary font-mono">1280 × 720 px</div>
+                            </div>
+                        </button>
+
+                        <button onclick="applyPresetAndLaunch(1200, 630, 'Facebook Cover')" class="px-4 py-3 rounded-xl bg-brand-panel border border-brand-panelBorder hover:border-brand-blue text-xs font-medium text-white flex items-center gap-2 transition group">
+                            <i class="fa-brands fa-facebook text-brand-blue group-hover:scale-110 transition"></i>
+                            <div class="text-left">
+                                <div class="font-bold">Facebook Banner</div>
+                                <div class="text-[10px] text-brand-textSecondary font-mono">1200 × 630 px</div>
+                            </div>
+                        </button>
+
+                        <button onclick="applyPresetAndLaunch(1920, 1080, 'HD Landscape')" class="px-4 py-3 rounded-xl bg-brand-panel border border-brand-panelBorder hover:border-brand-blue text-xs font-medium text-white flex items-center gap-2 transition group">
+                            <i class="fa-solid fa-desktop text-emerald-400 group-hover:scale-110 transition"></i>
+                            <div class="text-left">
+                                <div class="font-bold">Full HD Landscape</div>
+                                <div class="text-[10px] text-brand-textSecondary font-mono">1920 × 1080 px</div>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Quality Comparison Slider Section -->
+            <section id="comparison" class="py-16 border-b border-brand-panelBorder/40">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="text-center max-w-2xl mx-auto mb-10">
+                        <span class="text-xs font-mono font-semibold uppercase text-brand-cyan tracking-widest">Quality Inspection</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-white mt-1">Live Before & After Comparison</h2>
+                        <p class="text-brand-textSecondary text-xs sm:text-sm mt-2">
+                            Drag the interactive slider to evaluate compression fidelity and visual sharpness.
+                        </p>
+                    </div>
+
+                    <div class="max-w-4xl mx-auto rounded-2xl border border-brand-panelBorder bg-brand-panel p-2 shadow-2xl overflow-hidden">
+                        <div id="comparison-container" class="comparison-slider-wrapper h-[350px] sm:h-[420px] rounded-xl cursor-ew-resize">
+                            <img id="comp-after-img" src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1920&q=80" alt="Processed Preview" class="absolute inset-0 w-full h-full object-cover">
+                            <div class="absolute top-4 right-4 bg-brand-bg/90 backdrop-blur-md px-3 py-1.5 rounded-lg border border-brand-panelBorder text-xs font-mono flex items-center gap-2 shadow-lg">
+                                <span class="w-2 h-2 rounded-full bg-brand-cyan"></span>
+                                <span>Compressed / Optimized</span>
+                            </div>
+
+                            <div id="comparison-overlay" class="comparison-slider-overlay border-r-2 border-brand-cyan">
+                                <img id="comp-before-img" src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=3840&q=100" alt="Original Sample" class="absolute top-0 left-0 max-w-none h-full object-cover">
+                                <div class="absolute top-4 left-4 bg-brand-bg/90 backdrop-blur-md px-3 py-1.5 rounded-lg border border-brand-panelBorder text-xs font-mono flex items-center gap-2 shadow-lg">
+                                    <span class="w-2 h-2 rounded-full bg-brand-purple"></span>
+                                    <span>Original Raw Asset</span>
+                                </div>
+                            </div>
+
+                            <div id="comparison-handle" class="absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 w-9 h-9 rounded-full bg-brand-cyan text-brand-bg flex items-center justify-center shadow-glow-cyan font-bold text-xs pointer-events-none z-20">
+                                <i class="fa-solid fa-arrows-left-right"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Features Grid Section -->
+            <section class="py-16 border-b border-brand-panelBorder/40 bg-brand-bg">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="text-center max-w-2xl mx-auto mb-12">
+                        <span class="text-xs font-mono font-semibold uppercase text-brand-blue tracking-widest">Built For Creators</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-white mt-1">Engineered For Speed & Precision</h2>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-brand-panel border border-brand-panelBorder rounded-2xl p-6 hover:border-brand-blue transition">
+                            <div class="w-10 h-10 rounded-xl bg-brand-blue/10 border border-brand-blue/30 flex items-center justify-center text-brand-cyan mb-4">
+                                <i class="fa-solid fa-bolt text-lg"></i>
+                            </div>
+                            <h3 class="text-base font-bold text-white mb-2">Instant In-Browser Speed</h3>
+                            <p class="text-xs text-brand-textSecondary leading-relaxed">
+                                No network lag or server queues. Images are computed immediately on your GPU and device memory using HTML5 Canvas API.
+                            </p>
+                        </div>
+
+                        <div class="bg-brand-panel border border-brand-panelBorder rounded-2xl p-6 hover:border-brand-purple transition">
+                            <div class="w-10 h-10 rounded-xl bg-brand-purple/10 border border-brand-purple/30 flex items-center justify-center text-brand-purple mb-4">
+                                <i class="fa-solid fa-shield-halved text-lg"></i>
+                            </div>
+                            <h3 class="text-base font-bold text-white mb-2">100% Private Processing</h3>
+                            <p class="text-xs text-brand-textSecondary leading-relaxed">
+                                Your confidential photos and graphic assets never leave your computer or get uploaded to external cloud storage.
+                            </p>
+                        </div>
+
+                        <div class="bg-brand-panel border border-brand-panelBorder rounded-2xl p-6 hover:border-brand-cyan transition">
+                            <div class="w-10 h-10 rounded-xl bg-brand-cyan/10 border border-brand-cyan/30 flex items-center justify-center text-brand-cyan mb-4">
+                                <i class="fa-solid fa-wand-magic-sparkles text-lg"></i>
+                            </div>
+                            <h3 class="text-base font-bold text-white mb-2">Lossless Compression</h3>
+                            <p class="text-xs text-brand-textSecondary leading-relaxed">
+                                Smart color quantization algorithms reduce file payload sizes by up to 80% with minimal visual fidelity degradation.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- How It Works Step Section -->
+            <section class="py-16">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="text-center max-w-2xl mx-auto mb-12">
+                        <span class="text-xs font-mono font-semibold uppercase text-brand-cyan tracking-widest">Workflow</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-white mt-1">3 Simple Steps</h2>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+                        <div class="bg-brand-panel border border-brand-panelBorder rounded-2xl p-6 text-center">
+                            <div class="w-12 h-12 rounded-full bg-brand-blue/20 border border-brand-blue text-brand-cyan font-mono font-bold text-lg flex items-center justify-center mx-auto mb-4">1</div>
+                            <h3 class="font-bold text-white mb-2">Upload Asset</h3>
+                            <p class="text-xs text-brand-textSecondary">Drag and drop or browse any image file from your hard drive.</p>
+                        </div>
+
+                        <div class="bg-brand-panel border border-brand-panelBorder rounded-2xl p-6 text-center">
+                            <div class="w-12 h-12 rounded-full bg-brand-purple/20 border border-brand-purple text-brand-purple font-mono font-bold text-lg flex items-center justify-center mx-auto mb-4">2</div>
+                            <h3 class="font-bold text-white mb-2">Adjust Controls</h3>
+                            <p class="text-xs text-brand-textSecondary">Crop, resize dimensions, remove background colors, or compress quality.</p>
+                        </div>
+
+                        <div class="bg-brand-panel border border-brand-panelBorder rounded-2xl p-6 text-center">
+                            <div class="w-12 h-12 rounded-full bg-emerald-500/20 border border-emerald-500 text-emerald-400 font-mono font-bold text-lg flex items-center justify-center mx-auto mb-4">3</div>
+                            <h3 class="font-bold text-white mb-2">Download File</h3>
+                            <p class="text-xs text-brand-textSecondary">Export high-resolution WebP, PNG, or JPEG image directly to your disk.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+
+        <!-- ================= PAGE 2: ALL TOOLS DIRECTORY VIEW ================= -->
+        <div id="page-directory" class="hidden py-12 bg-brand-bg transition-all duration-300">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                
+                <div class="text-center max-w-3xl mx-auto mb-10">
+                    <h1 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight mb-3">
+                        Every tool you need to edit images in one place
+                    </h1>
+                    <p class="text-brand-textSecondary text-sm sm:text-base">
+                        Your online photo studio is here, fast, secure, and running directly in your browser.
+                    </p>
+
+                    <!-- Category Pills Filter -->
+                    <div class="flex flex-wrap items-center justify-center gap-2 mt-8">
+                        <button onclick="filterTools('all')" id="pill-all" class="px-5 py-2 rounded-full bg-brand-blue text-white text-xs font-semibold shadow-glow-blue transition">All</button>
+                        <button onclick="filterTools('optimize')" id="pill-optimize" class="px-5 py-2 rounded-full bg-brand-panel border border-brand-panelBorder text-brand-textSecondary hover:text-white text-xs font-semibold transition">Optimize</button>
+                        <button onclick="filterTools('edit')" id="pill-edit" class="px-5 py-2 rounded-full bg-brand-panel border border-brand-panelBorder text-brand-textSecondary hover:text-white text-xs font-semibold transition">Edit</button>
+                        <button onclick="filterTools('convert')" id="pill-convert" class="px-5 py-2 rounded-full bg-brand-panel border border-brand-panelBorder text-brand-textSecondary hover:text-white text-xs font-semibold transition">Convert</button>
+                    </div>
+                </div>
+
+                <!-- Tools Grid -->
+                <div id="tools-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    
+                    <div data-category="optimize" onclick="launchStudioTool('compress')" class="tool-card tool-card-hover bg-brand-panel border border-brand-panelBorder rounded-2xl p-5 cursor-pointer flex flex-col justify-between relative group">
+                        <div>
+                            <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mb-4 group-hover:bg-emerald-500 group-hover:text-white transition-all">
+                                <i class="fa-solid fa-compress text-xl"></i>
+                            </div>
+                            <h3 class="text-base font-bold text-white mb-2 group-hover:text-brand-cyan transition">Compress IMAGE</h3>
+                            <p class="text-xs text-brand-textSecondary leading-relaxed">Compress JPG, PNG, and WebP while maintaining visual sharpness.</p>
+                        </div>
+                    </div>
+
+                    <div data-category="edit" onclick="launchStudioTool('resize')" class="tool-card tool-card-hover bg-brand-panel border border-brand-panelBorder rounded-2xl p-5 cursor-pointer flex flex-col justify-between relative group">
+                        <div>
+                            <div class="w-12 h-12 rounded-xl bg-brand-blue/10 border border-brand-blue/30 flex items-center justify-center text-brand-cyan mb-4 group-hover:bg-brand-blue group-hover:text-white transition-all">
+                                <i class="fa-solid fa-up-right-and-down-left-from-center text-xl"></i>
+                            </div>
+                            <h3 class="text-base font-bold text-white mb-2 group-hover:text-brand-cyan transition">Resize IMAGE</h3>
+                            <p class="text-xs text-brand-textSecondary leading-relaxed">Set precise pixel dimensions, percentage scale, or lock aspect ratios.</p>
+                        </div>
+                    </div>
+
+                    <div data-category="edit" onclick="launchStudioTool('crop')" class="tool-card tool-card-hover bg-brand-panel border border-brand-panelBorder rounded-2xl p-5 cursor-pointer flex flex-col justify-between relative group">
+                        <div>
+                            <div class="w-12 h-12 rounded-xl bg-brand-purple/10 border border-brand-purple/30 flex items-center justify-center text-brand-purple mb-4 group-hover:bg-brand-purple group-hover:text-white transition-all">
+                                <i class="fa-solid fa-crop-simple text-xl"></i>
+                            </div>
+                            <h3 class="text-base font-bold text-white mb-2 group-hover:text-brand-cyan transition">Crop IMAGE</h3>
+                            <p class="text-xs text-brand-textSecondary leading-relaxed">Interactive canvas crop area with preset aspect ratios.</p>
+                        </div>
+                    </div>
+
+                    <div data-category="edit" onclick="launchStudioTool('bgremove')" class="tool-card tool-card-hover bg-brand-panel border border-brand-panelBorder rounded-2xl p-5 cursor-pointer flex flex-col justify-between relative group">
+                        <span class="absolute top-4 right-4 bg-brand-cyan/20 text-brand-cyan border border-brand-cyan/40 text-[9px] font-mono font-bold px-2 py-0.5 rounded-full">New!</span>
+                        <div>
+                            <div class="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400 mb-4 group-hover:bg-rose-500 group-hover:text-white transition-all">
+                                <i class="fa-solid fa-scissors text-xl"></i>
+                            </div>
+                            <h3 class="text-base font-bold text-white mb-2 group-hover:text-brand-cyan transition">Remove BG</h3>
+                            <p class="text-xs text-brand-textSecondary leading-relaxed">Detect and key out background colors into a transparent PNG mask.</p>
+                        </div>
+                    </div>
+
+                    <div data-category="convert" onclick="launchStudioTool('convert')" class="tool-card tool-card-hover bg-brand-panel border border-brand-panelBorder rounded-2xl p-5 cursor-pointer flex flex-col justify-between relative group">
+                        <div>
+                            <div class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 mb-4 group-hover:bg-amber-500 group-hover:text-white transition-all">
+                                <i class="fa-solid fa-file-image text-xl"></i>
+                            </div>
+                            <h3 class="text-base font-bold text-white mb-2 group-hover:text-brand-cyan transition">Convert Format</h3>
+                            <p class="text-xs text-brand-textSecondary leading-relaxed">Convert images between WEBP, PNG, and JPEG seamlessly.</p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ================= PAGE 3: STUDIO EDITOR WORKSPACE VIEW ================= -->
+        <div id="page-editor" class="hidden min-h-[calc(100vh-4rem)] flex flex-col bg-brand-bg">
+            
+            <!-- Tool Bar Selector -->
+            <div class="bg-brand-panel border-b border-brand-panelBorder px-4 py-2 flex items-center justify-between gap-4 overflow-x-auto text-xs font-medium">
+                <div class="flex items-center gap-2">
+                    <span class="text-brand-textSecondary text-[10px] font-mono uppercase tracking-wider mr-1">Active Tool:</span>
+                    <button onclick="setStudioTool('resize')" id="tool-tab-resize" class="px-3 py-1 rounded-lg bg-brand-blue/20 border border-brand-blue text-brand-cyan font-bold flex items-center gap-1.5">
+                        <i class="fa-solid fa-up-right-and-down-left-from-center text-[10px]"></i>
+                        <span>Resizer</span>
+                    </button>
+                    <button onclick="setStudioTool('compress')" id="tool-tab-compress" class="px-3 py-1 rounded-lg bg-brand-secondary border border-brand-panelBorder text-brand-textSecondary hover:text-white flex items-center gap-1.5">
+                        <i class="fa-solid fa-file-contract text-[10px]"></i>
+                        <span>Compressor</span>
+                    </button>
+                    <button onclick="setStudioTool('crop')" id="tool-tab-crop" class="px-3 py-1 rounded-lg bg-brand-secondary border border-brand-panelBorder text-brand-textSecondary hover:text-white flex items-center gap-1.5">
+                        <i class="fa-solid fa-crop-simple text-[10px]"></i>
+                        <span>Crop</span>
+                    </button>
+                    <button onclick="setStudioTool('bgremove')" id="tool-tab-bgremove" class="px-3 py-1 rounded-lg bg-brand-secondary border border-brand-panelBorder text-brand-textSecondary hover:text-white flex items-center gap-1.5">
+                        <i class="fa-solid fa-scissors text-[10px]"></i>
+                        <span>Remove BG</span>
+                    </button>
+                    <button onclick="setStudioTool('convert')" id="tool-tab-convert" class="px-3 py-1 rounded-lg bg-brand-secondary border border-brand-panelBorder text-brand-textSecondary hover:text-white flex items-center gap-1.5">
+                        <i class="fa-solid fa-right-left text-[10px]"></i>
+                        <span>Converter</span>
+                    </button>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <span id="editor-filename" class="text-white font-mono text-[11px] truncate max-w-[150px]">mountain_sunset.jpg</span>
+                    <button onclick="triggerFileUpload()" class="px-2.5 py-1 rounded bg-brand-secondary border border-brand-panelBorder text-brand-cyan hover:border-brand-cyan text-[11px] flex items-center gap-1">
+                        <i class="fa-solid fa-folder-open"></i>
+                        <span>New Image</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Main Canvas Stage & Sidebar Controls -->
+            <div class="flex-grow flex flex-col lg:flex-row overflow-hidden relative">
+                
+                <!-- Canvas Stage -->
+                <div id="canvas-wrapper" 
+                     ondragover="handleDragOver(event)" 
+                     ondragleave="handleDragLeave(event)" 
+                     ondrop="handleDrop(event)" 
+                     class="flex-grow bg-checkerboard relative flex items-center justify-center p-6 sm:p-10 overflow-auto min-h-[420px]">
+                    
+                    <div id="canvas-container" class="relative transition-transform duration-200 shadow-2xl rounded-lg border border-brand-panelBorder group select-none max-w-full">
+                        <canvas id="main-editor-canvas" class="rounded-md max-h-[50vh] object-contain block"></canvas>
+
+                        <!-- Draggable Crop Overlay -->
+                        <div id="crop-overlay-box" class="crop-overlay-box hidden">
+                            <div class="crop-handle crop-handle-nw"></div>
+                            <div class="crop-handle crop-handle-ne"></div>
+                            <div class="crop-handle crop-handle-sw"></div>
+                            <div class="crop-handle crop-handle-se"></div>
+                        </div>
+
+                        <div class="absolute bottom-3 left-1/2 -translate-x-1/2 bg-brand-bg/90 backdrop-blur-md px-3 py-1 rounded-full border border-brand-panelBorder text-[11px] font-mono text-brand-cyan shadow-xl pointer-events-none flex items-center gap-2">
+                            <i class="fa-solid fa-expand text-[10px]"></i>
+                            <span id="canvas-badge-dim">0 × 0 px</span>
+                        </div>
+                    </div>
+
+                    <!-- Zoom Widget -->
+                    <div class="absolute bottom-4 left-4 bg-brand-panel/90 backdrop-blur-md border border-brand-panelBorder rounded-lg p-1.5 flex items-center gap-2 text-xs font-mono shadow-xl">
+                        <button onclick="adjustZoom(-10)" class="w-6 h-6 rounded hover:bg-brand-secondary text-brand-textSecondary hover:text-white flex items-center justify-center">
+                            <i class="fa-solid fa-minus text-[10px]"></i>
+                        </button>
+                        <span id="zoom-level" class="w-10 text-center text-brand-cyan font-bold text-[10px]">100%</span>
+                        <button onclick="adjustZoom(10)" class="w-6 h-6 rounded hover:bg-brand-secondary text-brand-textSecondary hover:text-white flex items-center justify-center">
+                            <i class="fa-solid fa-plus text-[10px]"></i>
+                        </button>
+                        <button onclick="resetZoom()" class="px-2 py-0.5 rounded hover:bg-brand-secondary text-brand-textSecondary text-[10px]">Fit</button>
+                    </div>
+
+                </div>
+
+                <!-- Inspector Sidebar -->
+                <div class="w-full lg:w-96 bg-brand-panel border-t lg:border-t-0 lg:border-l border-brand-panelBorder flex flex-col justify-between overflow-y-auto z-10 shadow-xl">
+                    
+                    <div class="p-5 space-y-6">
+                        
+                        <!-- Panel: Resizer -->
+                        <div id="panel-resize" class="space-y-5">
+                            <div class="flex items-center justify-between pb-3 border-b border-brand-panelBorder">
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-up-right-and-down-left-from-center text-brand-blue"></i>
+                                    <span class="font-bold text-sm text-white">Image Resizer</span>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-12 gap-2 items-center">
+                                <div class="col-span-5">
+                                    <label class="block text-[10px] font-mono uppercase tracking-wider text-brand-textSecondary mb-1">Width (px)</label>
+                                    <input type="number" id="input-width" value="1920" oninput="handleWidthInput(this.value)" class="w-full bg-brand-secondary border border-brand-panelBorder rounded-lg px-3 py-2 text-sm font-mono text-white focus:outline-none focus:border-brand-blue transition">
+                                </div>
+
+                                <div class="col-span-2 flex flex-col items-center justify-end pt-4">
+                                    <button id="aspect-lock-btn" onclick="toggleAspectLock()" class="w-8 h-8 rounded-lg bg-brand-secondary border border-brand-blue text-brand-blue flex items-center justify-center transition shadow-glow-blue">
+                                        <i id="aspect-lock-icon" class="fa-solid fa-link text-xs"></i>
+                                    </button>
+                                </div>
+
+                                <div class="col-span-5">
+                                    <label class="block text-[10px] font-mono uppercase tracking-wider text-brand-textSecondary mb-1">Height (px)</label>
+                                    <input type="number" id="input-height" value="1080" oninput="handleHeightInput(this.value)" class="w-full bg-brand-secondary border border-brand-panelBorder rounded-lg px-3 py-2 text-sm font-mono text-white focus:outline-none focus:border-brand-blue transition">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-[10px] font-mono uppercase tracking-wider text-brand-textSecondary mb-2">Percentage Scale</label>
+                                <div class="grid grid-cols-5 gap-1.5">
+                                    <button onclick="setScale(0.25)" class="py-1.5 rounded bg-brand-secondary border border-brand-panelBorder text-xs font-mono text-brand-textSecondary hover:text-white transition">25%</button>
+                                    <button onclick="setScale(0.50)" class="py-1.5 rounded bg-brand-secondary border border-brand-panelBorder text-xs font-mono text-brand-textSecondary hover:text-white transition">50%</button>
+                                    <button onclick="setScale(0.75)" class="py-1.5 rounded bg-brand-secondary border border-brand-panelBorder text-xs font-mono text-brand-textSecondary hover:text-white transition">75%</button>
+                                    <button onclick="setScale(1.00)" class="py-1.5 rounded bg-brand-secondary border border-brand-blue/50 text-xs font-mono text-brand-cyan">100%</button>
+                                    <button onclick="setScale(2.00)" class="py-1.5 rounded bg-brand-secondary border border-brand-panelBorder text-xs font-mono text-brand-textSecondary hover:text-white transition">200%</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Panel: Compressor -->
+                        <div id="panel-compress" class="space-y-5 hidden">
+                            <div class="flex items-center justify-between pb-3 border-b border-brand-panelBorder">
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-file-contract text-brand-cyan"></i>
+                                    <span class="font-bold text-sm text-white">Smart Compressor</span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="flex items-center justify-between mb-2">
+                                    <label class="text-[10px] font-mono uppercase tracking-wider text-brand-textSecondary">Quality Rating</label>
+                                    <span id="compress-quality-val" class="text-xs font-mono text-brand-cyan font-bold">75%</span>
+                                </div>
+                                <input type="range" min="5" max="100" value="75" id="compress-slider" oninput="updateCompressQuality(this.value)" class="w-full cursor-pointer">
+                            </div>
+                        </div>
+
+                        <!-- Panel: Crop -->
+                        <div id="panel-crop" class="space-y-5 hidden">
+                            <div class="flex items-center justify-between pb-3 border-b border-brand-panelBorder">
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-crop-simple text-brand-purple"></i>
+                                    <span class="font-bold text-sm text-white">Interactive Canvas Crop</span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-[10px] font-mono uppercase tracking-wider text-brand-textSecondary mb-2">Aspect Ratio Presets</label>
+                                <div class="grid grid-cols-3 gap-2">
+                                    <button onclick="setCropRatio('free')" class="py-2 rounded bg-brand-secondary border border-brand-panelBorder text-xs text-white hover:border-brand-purple transition">Freeform</button>
+                                    <button onclick="setCropRatio('1:1')" class="py-2 rounded bg-brand-secondary border border-brand-panelBorder text-xs text-white hover:border-brand-purple transition">1:1 Square</button>
+                                    <button onclick="setCropRatio('16:9')" class="py-2 rounded bg-brand-secondary border border-brand-panelBorder text-xs text-white hover:border-brand-purple transition">16:9 Landscape</button>
+                                </div>
+                            </div>
+
+                            <button onclick="applyCrop()" class="w-full py-2.5 rounded-xl bg-brand-purple text-white font-bold text-xs uppercase tracking-wider shadow-glow-purple transition">
+                                <i class="fa-solid fa-check mr-1.5"></i> Apply Crop Selection
+                            </button>
+                        </div>
+
+                        <!-- Panel: Background Remover -->
+                        <div id="panel-bgremove" class="space-y-5 hidden">
+                            <div class="flex items-center justify-between pb-3 border-b border-brand-panelBorder">
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-scissors text-rose-400"></i>
+                                    <span class="font-bold text-sm text-white">Background Remover</span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-[10px] font-mono uppercase tracking-wider text-brand-textSecondary mb-2">Remove Color Mode</label>
+                                <div class="grid grid-cols-2 gap-2 mb-4">
+                                    <button onclick="setBgRemoveMode('light')" id="bg-mode-light" class="py-2 rounded bg-brand-blue/20 border border-brand-blue text-xs font-bold text-brand-cyan">Light/White BG</button>
+                                    <button onclick="setBgRemoveMode('dark')" id="bg-mode-dark" class="py-2 rounded bg-brand-secondary border border-brand-panelBorder text-xs font-bold text-brand-textSecondary">Dark/Black BG</button>
+                                </div>
+
+                                <div class="flex items-center justify-between mb-2">
+                                    <label class="text-[10px] font-mono uppercase tracking-wider text-brand-textSecondary">Sensitivity Tolerance</label>
+                                    <span id="bg-tolerance-val" class="text-xs font-mono text-rose-400 font-bold">30</span>
+                                </div>
+                                <input type="range" min="5" max="100" value="30" id="bg-tolerance-slider" oninput="document.getElementById('bg-tolerance-val').innerText=this.value" class="w-full cursor-pointer">
+                            </div>
+
+                            <button onclick="executeBgRemoval()" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-brand-purple text-white font-bold text-xs uppercase tracking-wider shadow-glow-purple transition">
+                                <i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i> Key Out Background
+                            </button>
+                        </div>
+
+                        <!-- Panel: Convert -->
+                        <div id="panel-convert" class="space-y-5 hidden">
+                            <div class="flex items-center justify-between pb-3 border-b border-brand-panelBorder">
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-right-left text-amber-400"></i>
+                                    <span class="font-bold text-sm text-white">Format Converter</span>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-2">
+                                <button onclick="setTargetFormat('WEBP')" id="conv-fmt-WEBP" class="py-2.5 rounded-lg bg-emerald-500/20 border border-emerald-500 text-xs font-mono font-bold text-emerald-400">WEBP</button>
+                                <button onclick="setTargetFormat('PNG')" id="conv-fmt-PNG" class="py-2.5 rounded-lg bg-brand-secondary border border-brand-panelBorder text-xs font-mono font-bold text-brand-textSecondary hover:text-white">PNG</button>
+                                <button onclick="setTargetFormat('JPEG')" id="conv-fmt-JPEG" class="py-2.5 rounded-lg bg-brand-secondary border border-brand-panelBorder text-xs font-mono font-bold text-brand-textSecondary hover:text-white">JPEG</button>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Bottom Download Actions -->
+                    <div class="p-5 border-t border-brand-panelBorder bg-brand-secondary/40 space-y-3">
+                        <button onclick="processAndDownloadImage()" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-brand-blue via-brand-cyan to-brand-purple text-white font-bold text-xs uppercase tracking-wider shadow-glow-blue hover:brightness-110 transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-download text-sm"></i>
+                            <span>Download Processed Asset</span>
+                        </button>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="bg-brand-bg border-t border-brand-panelBorder/60 py-8 text-xs text-brand-textSecondary">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-2">
+                <span class="font-bold text-white tracking-tight">PixelForge Creative Suite</span>
+                <span class="text-[10px] text-brand-textSecondary ml-2">© 2026 PixelForge Inc. All rights reserved.</span>
+            </div>
+            <div class="flex items-center gap-6">
+                <button onclick="switchPage('directory')" class="hover:text-brand-cyan transition">All Tools</button>
+                <button onclick="switchPage('landing')" class="hover:text-brand-cyan transition">Home</button>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Global Application State
+        let activePage = 'landing';
+        let activeTool = 'resize';
+        let originalImage = new Image();
+        let loadedFileName = "mountain_sunset.jpg";
+        let loadedFileSize = 8.4 * 1024 * 1024;
+        
+        let targetWidth = 1920;
+        let targetHeight = 1080;
+        let originalWidth = 1920;
+        let originalHeight = 1080;
+        let aspectLocked = true;
+        let currentZoom = 100;
+        let selectedFormat = 'WEBP';
+        let currentQuality = 75;
+        let bgRemoveMode = 'light';
+
+        // Crop Box State Coordinates
+        let cropState = { x: 50, y: 50, width: 200, height: 200 };
+        let isDraggingCrop = false;
+        let dragStart = { x: 0, y: 0 };
+
+        const DEFAULT_SAMPLE_URL = "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=3840&q=100";
+
+        window.addEventListener('load', () => {
+            loadInitialSampleImage();
+            initCropDragEvents();
+        });
+
+        function loadInitialSampleImage() {
+            originalImage.crossOrigin = "anonymous";
+            originalImage.onload = () => {
+                originalWidth = originalImage.naturalWidth || 3840;
+                originalHeight = originalImage.naturalHeight || 2160;
+                targetWidth = originalWidth;
+                targetHeight = originalHeight;
+                
+                document.getElementById('input-width').value = targetWidth;
+                document.getElementById('input-height').value = targetHeight;
+                
+                cropState = { x: targetWidth * 0.1, y: targetHeight * 0.1, width: targetWidth * 0.8, height: targetHeight * 0.8 };
+                redrawCanvas();
+            };
+            originalImage.src = DEFAULT_SAMPLE_URL;
+        }
+
+        function switchPage(pageId) {
+            activePage = pageId;
+            ['landing', 'directory', 'editor'].forEach(p => {
+                const pageEl = document.getElementById(`page-${p}`);
+                const btnNav = document.getElementById(`nav-btn-${p}`);
+                if (p === pageId) {
+                    pageEl.classList.remove('hidden');
+                    if (btnNav) btnNav.className = "px-3.5 py-1.5 rounded-full text-white bg-brand-panel border border-brand-panelBorder transition";
+                } else {
+                    pageEl.classList.add('hidden');
+                    if (btnNav) btnNav.className = "px-3.5 py-1.5 rounded-full text-brand-textSecondary hover:text-white transition";
+                }
+            });
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            if (pageId === 'editor') redrawCanvas();
+        }
+
+        function launchStudioTool(tool) {
+            switchPage('editor');
+            setStudioTool(tool);
+        }
+
+        function setStudioTool(tool) {
+            activeTool = tool;
+            ['resize', 'compress', 'crop', 'bgremove', 'convert'].forEach(t => {
+                const tab = document.getElementById(`tool-tab-${t}`);
+                const panel = document.getElementById(`panel-${t}`);
+                if (tab && panel) {
+                    if (t === tool) {
+                        tab.className = "px-3 py-1 rounded-lg bg-brand-blue/20 border border-brand-blue text-brand-cyan font-bold flex items-center gap-1.5";
+                        panel.classList.remove('hidden');
+                    } else {
+                        tab.className = "px-3 py-1 rounded-lg bg-brand-secondary border border-brand-panelBorder text-brand-textSecondary hover:text-white flex items-center gap-1.5";
+                        panel.classList.add('hidden');
+                    }
+                }
+            });
+
+            const cropOverlay = document.getElementById('crop-overlay-box');
+            if (tool === 'crop') cropOverlay.classList.remove('hidden');
+            else cropOverlay.classList.add('hidden');
+
+            redrawCanvas();
+        }
+
+        function applyPresetAndLaunch(w, h, name) {
+            targetWidth = w;
+            targetHeight = h;
+            document.getElementById('input-width').value = w;
+            document.getElementById('input-height').value = h;
+            launchStudioTool('resize');
+        }
+
+        function filterTools(category) {
+            const cards = document.querySelectorAll('.tool-card');
+            cards.forEach(card => {
+                if (category === 'all' || card.getAttribute('data-category') === category) {
+                    card.classList.remove('hidden');
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+        }
+
+        function triggerFileUpload() {
+            document.getElementById('global-file-input').click();
+        }
+
+        function handleFileSelect(e) {
+            if (e.target.files && e.target.files[0]) processUploadedFile(e.target.files[0]);
+        }
+
+        function handleDragOver(e) { e.preventDefault(); }
+        function handleDragLeave(e) { e.preventDefault(); }
+        function handleDrop(e) {
+            e.preventDefault();
+            if (e.dataTransfer.files && e.dataTransfer.files[0]) processUploadedFile(e.dataTransfer.files[0]);
+        }
+
+        function processUploadedFile(file) {
+            if (!file.type.startsWith('image/')) return;
+            loadedFileName = file.name;
+            loadedFileSize = file.size;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    originalImage = img;
+                    originalWidth = img.naturalWidth;
+                    originalHeight = img.naturalHeight;
+                    targetWidth = originalWidth;
+                    targetHeight = originalHeight;
+
+                    document.getElementById('input-width').value = targetWidth;
+                    document.getElementById('input-height').value = targetHeight;
+                    document.getElementById('editor-filename').innerText = loadedFileName;
+
+                    document.getElementById('comp-before-img').src = e.target.result;
+                    document.getElementById('comp-after-img').src = e.target.result;
+
+                    cropState = { x: targetWidth * 0.1, y: targetHeight * 0.1, width: targetWidth * 0.8, height: targetHeight * 0.8 };
+                    redrawCanvas();
+                    switchPage('editor');
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function redrawCanvas() {
+            const canvas = document.getElementById('main-editor-canvas');
+            if (!canvas || !originalImage.complete) return;
+
+            canvas.width = targetWidth;
+            canvas.height = targetHeight;
+
+            const ctx = canvas.getContext('2d');
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            ctx.clearRect(0, 0, targetWidth, targetHeight);
+            ctx.drawImage(originalImage, 0, 0, targetWidth, targetHeight);
+
+            document.getElementById('canvas-badge-dim').innerText = `${targetWidth} × ${targetHeight} px`;
+            updateCropOverlayPosition();
+        }
+
+        // Draggable Crop Box Overlay Logic
+        function updateCropOverlayPosition() {
+            const cropBox = document.getElementById('crop-overlay-box');
+            if (!cropBox) return;
+
+            const canvas = document.getElementById('main-editor-canvas');
+            const scaleX = canvas.clientWidth / targetWidth;
+            const scaleY = canvas.clientHeight / targetHeight;
+
+            cropBox.style.left = `${cropState.x * scaleX}px`;
+            cropBox.style.top = `${cropState.y * scaleY}px`;
+            cropBox.style.width = `${cropState.width * scaleX}px`;
+            cropBox.style.height = `${cropState.height * scaleY}px`;
+        }
+
+        function initCropDragEvents() {
+            const cropBox = document.getElementById('crop-overlay-box');
+            if (!cropBox) return;
+
+            cropBox.addEventListener('mousedown', (e) => {
+                isDraggingCrop = true;
+                dragStart = { x: e.clientX, y: e.clientY };
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (!isDraggingCrop) return;
+                const canvas = document.getElementById('main-editor-canvas');
+                const scaleX = targetWidth / canvas.clientWidth;
+                const scaleY = targetHeight / canvas.clientHeight;
+
+                const dx = (e.clientX - dragStart.x) * scaleX;
+                const dy = (e.clientY - dragStart.y) * scaleY;
+
+                cropState.x = Math.max(0, Math.min(targetWidth - cropState.width, cropState.x + dx));
+                cropState.y = Math.max(0, Math.min(targetHeight - cropState.height, cropState.y + dy));
+
+                dragStart = { x: e.clientX, y: e.clientY };
+                updateCropOverlayPosition();
+            });
+
+            window.addEventListener('mouseup', () => { isDraggingCrop = false; });
+        }
+
+        function setCropRatio(ratio) {
+            if (ratio === '1:1') {
+                const side = Math.min(targetWidth, targetHeight) * 0.7;
+                cropState = { x: (targetWidth - side) / 2, y: (targetHeight - side) / 2, width: side, height: side };
+            } else if (ratio === '16:9') {
+                const w = targetWidth * 0.8;
+                const h = w * (9 / 16);
+                cropState = { x: (targetWidth - w) / 2, y: (targetHeight - h) / 2, width: w, height: h };
+            }
+            updateCropOverlayPosition();
+        }
+
+        function applyCrop() {
+            const canvas = document.createElement('canvas');
+            canvas.width = cropState.width;
+            canvas.height = cropState.height;
+            const ctx = canvas.getContext('2d');
+
+            ctx.drawImage(originalImage, cropState.x, cropState.y, cropState.width, cropState.height, 0, 0, cropState.width, cropState.height);
+
+            const croppedImg = new Image();
+            croppedImg.onload = () => {
+                originalImage = croppedImg;
+                targetWidth = Math.round(cropState.width);
+                targetHeight = Math.round(cropState.height);
+                document.getElementById('input-width').value = targetWidth;
+                document.getElementById('input-height').value = targetHeight;
+                cropState = { x: targetWidth * 0.1, y: targetHeight * 0.1, width: targetWidth * 0.8, height: targetHeight * 0.8 };
+                redrawCanvas();
+            };
+            croppedImg.src = canvas.toDataURL();
+        }
+
+        // Functional Background Removal Logic (Client-Side Threshold Keying)
+        function setBgRemoveMode(mode) {
+            bgRemoveMode = mode;
+            document.getElementById('bg-mode-light').className = mode === 'light' ? "py-2 rounded bg-brand-blue/20 border border-brand-blue text-xs font-bold text-brand-cyan" : "py-2 rounded bg-brand-secondary border border-brand-panelBorder text-xs font-bold text-brand-textSecondary";
+            document.getElementById('bg-mode-dark').className = mode === 'dark' ? "py-2 rounded bg-brand-blue/20 border border-brand-blue text-xs font-bold text-brand-cyan" : "py-2 rounded bg-brand-secondary border border-brand-panelBorder text-xs font-bold text-brand-textSecondary";
+        }
+
+        function executeBgRemoval() {
+            const canvas = document.getElementById('main-editor-canvas');
+            const ctx = canvas.getContext('2d');
+            const imgData = ctx.getImageData(0, 0, targetWidth, targetHeight);
+            const data = imgData.data;
+            const tolerance = parseInt(document.getElementById('bg-tolerance-slider').value) * 2.5;
+
+            for (let i = 0; i < data.length; i += 4) {
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+
+                if (bgRemoveMode === 'light') {
+                    if (r > 255 - tolerance && g > 255 - tolerance && b > 255 - tolerance) {
+                        data[i + 3] = 0; // Turn pixel transparent
+                    }
+                } else if (bgRemoveMode === 'dark') {
+                    if (r < tolerance && g < tolerance && b < tolerance) {
+                        data[i + 3] = 0;
+                    }
+                }
+            }
+
+            ctx.putImageData(imgData, 0, 0);
+
+            const newImg = new Image();
+            newImg.onload = () => { originalImage = newImg; };
+            newImg.src = canvas.toDataURL('image/png');
+        }
+
+        function handleWidthInput(val) {
+            targetWidth = parseInt(val) || 0;
+            if (aspectLocked && targetWidth > 0 && originalWidth > 0) {
+                targetHeight = Math.round(targetWidth * (originalHeight / originalWidth));
+                document.getElementById('input-height').value = targetHeight;
+            }
+            redrawCanvas();
+        }
+
+        function handleHeightInput(val) {
+            targetHeight = parseInt(val) || 0;
+            if (aspectLocked && targetHeight > 0 && originalHeight > 0) {
+                targetWidth = Math.round(targetHeight * (originalWidth / originalHeight));
+                document.getElementById('input-width').value = targetWidth;
+            }
+            redrawCanvas();
+        }
+
+        function toggleAspectLock() {
+            aspectLocked = !aspectLocked;
+            const btn = document.getElementById('aspect-lock-btn');
+            const icon = document.getElementById('aspect-lock-icon');
+            if (aspectLocked) {
+                btn.className = "w-8 h-8 rounded-lg bg-brand-secondary border border-brand-blue text-brand-blue flex items-center justify-center transition shadow-glow-blue";
+                icon.className = "fa-solid fa-link text-xs";
+            } else {
+                btn.className = "w-8 h-8 rounded-lg bg-brand-secondary border border-brand-panelBorder text-brand-textSecondary flex items-center justify-center transition";
+                icon.className = "fa-solid fa-link-slash text-xs";
+            }
+        }
+
+        function setScale(factor) {
+            targetWidth = Math.round(originalWidth * factor);
+            targetHeight = Math.round(originalHeight * factor);
+            document.getElementById('input-width').value = targetWidth;
+            document.getElementById('input-height').value = targetHeight;
+            redrawCanvas();
+        }
+
+        function updateCompressQuality(val) {
+            currentQuality = val;
+            document.getElementById('compress-quality-val').innerText = `${val}%`;
+        }
+
+        function setTargetFormat(fmt) {
+            selectedFormat = fmt;
+            ['WEBP', 'PNG', 'JPEG'].forEach(f => {
+                const btn = document.getElementById(`conv-fmt-${f}`);
+                if (btn) {
+                    if (f === fmt) btn.className = "py-2.5 rounded-lg bg-emerald-500/20 border border-emerald-500 text-xs font-mono font-bold text-emerald-400";
+                    else btn.className = "py-2.5 rounded-lg bg-brand-secondary border border-brand-panelBorder text-xs font-mono font-bold text-brand-textSecondary hover:text-white";
+                }
+            });
+        }
+
+        function processAndDownloadImage() {
+            const canvas = document.getElementById('main-editor-canvas');
+            let mimeType = 'image/webp';
+            let extension = 'webp';
+
+            if (selectedFormat === 'PNG') { mimeType = 'image/png'; extension = 'png'; }
+            else if (selectedFormat === 'JPEG') { mimeType = 'image/jpeg'; extension = 'jpg'; }
+
+            const dataUrl = canvas.toDataURL(mimeType, currentQuality / 100);
+            const link = document.createElement('a');
+            link.download = `pixelforge_${activeTool}_${targetWidth}x${targetHeight}.${extension}`;
+            link.href = dataUrl;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function adjustZoom(delta) {
+            currentZoom = Math.max(20, Math.min(200, currentZoom + delta));
+            document.getElementById('canvas-container').style.transform = `scale(${currentZoom / 100})`;
+            document.getElementById('zoom-level').innerText = `${currentZoom}%`;
+        }
+
+        function resetZoom() {
+            currentZoom = 100;
+            document.getElementById('canvas-container').style.transform = `scale(1)`;
+            document.getElementById('zoom-level').innerText = `100%`;
+        }
+
+        // Before/After Slider Drag Listener
+        const compContainer = document.getElementById('comparison-container');
+        const compOverlay = document.getElementById('comparison-overlay');
+        const compHandle = document.getElementById('comparison-handle');
+        let isCompDragging = false;
+
+        if (compContainer) {
+            compContainer.addEventListener('mousedown', (e) => {
+                isCompDragging = true;
+                const rect = compContainer.getBoundingClientRect();
+                let pos = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+                const pct = (pos / rect.width) * 100;
+                compOverlay.style.width = `${pct}%`;
+                compHandle.style.left = `${pct}%`;
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (!isCompDragging) return;
+                const rect = compContainer.getBoundingClientRect();
+                let pos = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+                const pct = (pos / rect.width) * 100;
+                compOverlay.style.width = `${pct}%`;
+                compHandle.style.left = `${pct}%`;
+            });
+
+            window.addEventListener('mouseup', () => { isCompDragging = false; });
+        }
+    </script>
+</body>
+</html>
