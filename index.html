@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<!-- ===== SEO ===== --->
-<title>PixelForge – Free Online Image Resizer, Compressor, Cropper & Converter</title>
+<!-- ===== SEO ===== -->
+<title>PixelForge – Free Online Image Editor: Resize, Compress, Crop & Remove Background</title>
 <meta name="description" content="Free online image editor: resize, compress, crop, rotate, remove background, add watermark and convert JPG, PNG, WebP. Runs in your browser – no upload, no signup.">
 <meta name="keywords" content="image resizer, image compressor, compress image online, resize image, crop image, remove background, convert webp to jpg, png to webp, image to base64, add watermark, free image editor">
 <meta name="robots" content="index,follow">
@@ -18,7 +18,7 @@
 <!-- ===== FAVICON (inline SVG, no extra request) ===== -->
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23080B12'/%3E%3Cpath d='M32 10 52 21v22L32 54 12 43V21z' fill='none' stroke='%2322D3EE' stroke-width='5' stroke-linejoin='round'/%3E%3C/svg%3E">
 <!-- ===== STRUCTURED DATA ===== -->
-<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebApplication","name":"PixelForge","url":"https://pixelforge-studio-psi.vercel.app/","applicationCategory":"MultimediaApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Are my images uploaded to a server?","acceptedAnswer":{"@type":"Answer","text":"No. All editing happens locally in your browser using the Canvas API."}},{"@type":"Question","name":"Which formats can I export?","acceptedAnswer":{"@type":"Answer","text":"WebP, JPEG and PNG. Quality is adjustable for WebP and JPEG."}},{"@type":"Question","name":"Is PixelForge free?","acceptedAnswer":{"@type":"Answer","text":"Yes, all tools are free with no signup."}}]}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebApplication","name":"PixelForge","url":"https://pixelforge-studio-psi.vercel.app/","applicationCategory":"MultimediaApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Are my images uploaded to a server?","acceptedAnswer":{"@type":"Answer","text":"No. Editing happens locally in your browser."}},{"@type":"Question","name":"How do I compress an image without losing quality?","acceptedAnswer":{"@type":"Answer","text":"Export as WebP or JPEG and lower quality slightly, around 75-85 percent."}},{"@type":"Question","name":"Which formats can I export?","acceptedAnswer":{"@type":"Answer","text":"WebP, JPEG and PNG."}},{"@type":"Question","name":"Does the background remover work on real photos?","acceptedAnswer":{"@type":"Answer","text":"Yes, the AI mode handles people, products and animals."}},{"@type":"Question","name":"Is PixelForge free?","acceptedAnswer":{"@type":"Answer","text":"Yes, every tool is free with no signup."}}]}]}</script>
 <style>
 /* ===== BASE / TOKENS ===== */
 :root{--bg:#080B12;--p:#111827;--p2:#0D1220;--bd:#253148;--t:#F8FAFC;--m:#94A3B8;--c:#22D3EE;--b:#3B82F6;--pu:#8B5CF6}
@@ -76,6 +76,21 @@ input[type=range]{width:100%;accent-color:var(--b)}
 footer{border-top:1px solid var(--bd);padding:28px 0;color:var(--m);font-size:13px}
 footer .w{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+/* ===== HOME (premium) ===== */
+.orb{position:absolute;border-radius:50%;filter:blur(110px);opacity:.28;pointer-events:none}
+.pill{display:inline-flex;gap:8px;align-items:center;padding:6px 14px;border:1px solid var(--bd);border-radius:99px;background:var(--p);font-size:13px;color:var(--c);margin-bottom:20px}
+.pill:before{content:"";width:8px;height:8px;border-radius:50%;background:var(--c);box-shadow:0 0 10px var(--c)}
+.cta{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:26px}.ghost{background:transparent}
+.trust{display:flex;flex-wrap:wrap;gap:6px 20px;color:var(--m);font-size:13px;list-style:none;padding:0}.trust li:before{content:"✓ ";color:var(--c)}
+.drop{box-shadow:0 20px 60px -20px #3B82F666}
+.fmts{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:16px}.fmts span{font-size:11px;padding:3px 10px;border-radius:99px;background:var(--bg);border:1px solid var(--bd);color:var(--m)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px;text-align:center;color:var(--m);font-size:12px}
+.stats div{background:var(--p);border:1px solid var(--bd);border-radius:12px;padding:10px}.stats b{display:block;font-size:20px;color:var(--t)}
+.sec-h{text-align:center;max-width:640px;margin:0 auto 34px}
+.band{background:linear-gradient(180deg,var(--p2),var(--bg));border-block:1px solid var(--bd)}
+.steps{counter-reset:s}.steps .card:before{counter-increment:s;content:counter(s);display:grid;place-items:center;width:32px;height:32px;border-radius:50%;background:#3B82F633;color:var(--c);font-weight:700;margin-bottom:10px}
+.final{text-align:center;background:radial-gradient(500px 220px at 50% 100%,#8B5CF633,transparent)}
+@media(max-width:860px){.cta,.trust{justify-content:center}}
 </style>
 </head>
 <body>
@@ -95,35 +110,39 @@ footer .w{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
 
 <main id="home">
 <!-- ===== HERO (100vh) ===== -->
-<section class="hero" style="padding-block:0"><div class="w">
+<section class="hero" style="padding-block:0;position:relative;overflow:hidden">
+  <div class="orb" style="width:380px;height:380px;background:#3B82F6;top:8%;left:-6%"></div><div class="orb" style="width:320px;height:320px;background:#8B5CF6;bottom:4%;right:-4%"></div>
+  <div class="w" style="position:relative">
   <div>
-    <h1>Edit images in your browser. <span class="grad">Nothing gets uploaded.</span></h1>
-    <p>Resize, compress, crop, rotate, remove backgrounds and convert to WebP, JPG or PNG. Free, no signup, files stay on your device.</p>
-    <button class="btn" style="padding:12px 22px" onclick="file.click()">Choose an image</button>
+    <span class="pill">Free · Private · No signup</span>
+    <h1>The fastest way to <span class="grad">resize, compress &amp; edit images</span> online</h1>
+    <p>Shrink photos for a faster website, cut out backgrounds with AI, resize for Instagram or YouTube, and convert to WebP, JPG or PNG. Everything runs inside your browser, so your files never leave your device.</p>
+    <div class="cta"><button class="btn" style="padding:13px 24px" onclick="file.click()">Upload an image</button><button class="ghost" style="padding:13px 24px" data-home data-go="tools">Explore all 9 tools</button></div>
+    <ul class="trust"><li>No upload to any server</li><li>Real file-size preview</li><li>Works on phone &amp; desktop</li></ul>
   </div>
-  <div class="drop" id="drop" tabindex="0" role="button" aria-label="Upload image">
-    <div style="font-size:38px">🖼️</div><b>Drop an image here</b><small>JPG, PNG, WebP, AVIF, GIF · or click to browse · or paste (Ctrl+V)</small>
+  <div>
+    <div class="drop" id="drop" tabindex="0" role="button" aria-label="Upload image">
+      <div style="font-size:42px">🖼️</div><b>Drop your image here</b><small>or click to browse · or paste with Ctrl+V</small>
+      <div class="fmts"><span>JPG</span><span>PNG</span><span>WebP</span><span>AVIF</span><span>GIF</span></div>
+    </div>
+    <div class="stats"><div><b>9</b>tools</div><div><b>0</b>uploads</div><div><b>Free</b>forever</div></div>
   </div>
 </div></section>
 
-<!-- ===== ALL TOOLS ===== -->
-<section id="tools"><div class="w">
-  <h2>All image tools</h2><p class="sub">Pick a tool, then upload your image.</p>
+<!-- ===== POPULAR TOOLS ===== -->
+<section class="band"><div class="w">
+  <div class="sec-h"><h2>Popular image tools</h2><p class="sub">The four most-used tools, one click away.</p></div>
   <div class="grid">
-    <a class="card" href="#resize" data-t="resize"><i>↔️</i><h3>Resize image</h3><p>Exact pixels or percentage, with aspect lock.</p></a>
-    <a class="card" href="#compress" data-t="compress"><i>🗜️</i><h3>Compress image</h3><p>Shrink JPG, PNG and WebP. See the real saved size.</p></a>
-    <a class="card" href="#crop" data-t="crop"><i>✂️</i><h3>Crop image</h3><p>Drag on the image to select. Free, 1:1, 16:9, 4:3.</p></a>
-    <a class="card" href="#rotate" data-t="rotate"><i>🔄</i><h3>Rotate &amp; flip</h3><p>Turn 90° or mirror horizontally and vertically.</p></a>
-    <a class="card" href="#filters" data-t="filters"><i>🎨</i><h3>Filters</h3><p>Brightness, contrast, saturation, blur, grayscale.</p></a>
-    <a class="card" href="#watermark" data-t="watermark"><i>💧</i><h3>Add watermark</h3><p>Stamp your text with custom size and opacity.</p></a>
-    <a class="card" href="#bg" data-t="bg"><i>🪄</i><h3>Remove solid background</h3><p>Clears plain white or single-color backgrounds. Not for complex photos.</p></a>
-    <a class="card" href="#convert" data-t="convert"><i>🔁</i><h3>Convert format</h3><p>WebP, JPG and PNG conversion.</p></a>
-    <a class="card" href="#base64" data-t="base64"><i>🧬</i><h3>Image to Base64</h3><p>Copy a data URL for CSS, HTML or email.</p></a>
+    <a class="card" href="#compress" data-t="compress"><i>🗜️</i><h3>Compress image</h3><p>Cut file size for faster pages. See the exact KB saved before you download.</p></a>
+    <a class="card" href="#resize" data-t="resize"><i>↔️</i><h3>Resize image</h3><p>Set exact pixels or a percentage. Aspect ratio lock keeps photos undistorted.</p></a>
+    <a class="card" href="#bg" data-t="bg"><i>🪄</i><h3>Remove background</h3><p>AI cutout for real photos. Get a transparent PNG in seconds.</p></a>
+    <a class="card" href="#convert" data-t="convert"><i>🔁</i><h3>Convert format</h3><p>Switch between WebP, JPG and PNG with adjustable quality.</p></a>
   </div>
+  <p style="text-align:center;margin-top:24px"><button data-home data-go="tools">View all tools</button></p>
 </div></section>
 
 <!-- ===== SIZE PRESETS ===== -->
-<section style="padding-top:0"><div class="w">
+<section><div class="w">
   <h2>Social media sizes</h2><p class="sub">One click to resize for the platform.</p>
   <div class="presets">
     <button data-p="1080,1080">Instagram Square<small>1080 × 1080</small></button>
@@ -134,20 +153,74 @@ footer .w{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
   </div>
 </div></section>
 
-<!-- ===== FEATURES ===== -->
-<section style="padding-top:0"><div class="w"><div class="grid">
-  <div class="card"><h3>Private by design</h3><p>Processing uses the Canvas API on your device. Your files are never sent to a server.</p></div>
-  <div class="card"><h3>Real size numbers</h3><p>The editor shows the actual output file size before you download.</p></div>
-  <div class="card"><h3>Undo anything</h3><p>Every edit can be undone with Ctrl+Z, so you can experiment.</p></div>
-</div></div></section>
+
+<!-- ===== HOW IT WORKS ===== -->
+<section><div class="w">
+  <div class="sec-h"><h2>Edit an image in three steps</h2><p class="sub">No account, no installs, no waiting in a queue.</p></div>
+  <div class="grid steps">
+    <div class="card"><h3>Add your image</h3><p>Drag it in, browse for a file, or paste a screenshot straight from your clipboard.</p></div>
+    <div class="card"><h3>Pick a tool</h3><p>Resize, crop, rotate, add filters or a watermark, remove the background. Undo any step.</p></div>
+    <div class="card"><h3>Download the result</h3><p>Choose WebP, JPG or PNG, set the quality, check the new file size, and save.</p></div>
+  </div>
+</div></section>
+
+<!-- ===== WHY PIXELFORGE ===== -->
+<section class="band"><div class="w">
+  <div class="sec-h"><h2>Why people use PixelForge</h2><p class="sub">A focused image editor that respects your files and your time.</p></div>
+  <div class="grid">
+    <div class="card"><i>🔒</i><h3>Private by design</h3><p>Editing runs on your own device with the browser Canvas API. Your photos are not sent to a server, so IDs, receipts and client work stay yours.</p></div>
+    <div class="card"><i>📉</i><h3>Honest size numbers</h3><p>The editor shows your original file size next to the real output size, so you know exactly how much you saved before downloading.</p></div>
+    <div class="card"><i>✨</i><h3>AI background removal</h3><p>Cut out people, products and pets from real photos. The AI model runs in your browser and only loads when you use it.</p></div>
+    <div class="card"><i>⚡</i><h3>Light and quick</h3><p>No heavy frameworks and no sign-up wall. The page loads fast, even on a mobile connection.</p></div>
+  </div>
+</div></section>
+
+<!-- ===== USE CASES (SEO content) ===== -->
+<section><div class="w">
+  <div class="sec-h"><h2>Made for everyday image jobs</h2></div>
+  <div class="grid">
+    <div class="card"><h3>Bloggers &amp; website owners</h3><p>Compress images and convert them to WebP to improve page speed and Core Web Vitals without visible quality loss.</p></div>
+    <div class="card"><h3>Online sellers</h3><p>Remove backgrounds from product photos, crop to a square and add a watermark before listing on your store.</p></div>
+    <div class="card"><h3>Social media creators</h3><p>Resize to Instagram, YouTube thumbnail and Facebook sizes with one click, then export at the right quality.</p></div>
+    <div class="card"><h3>Developers &amp; designers</h3><p>Convert PNG to WebP, flip or rotate assets, and copy an image as a Base64 data URL for CSS, HTML or email.</p></div>
+  </div>
+</div></section>
 
 <!-- ===== FAQ ===== -->
-<section style="padding-top:0"><div class="w" style="max-width:760px">
-  <h2>Questions</h2><br>
-  <details><summary>Are my images uploaded to a server?</summary><p>No. All editing happens locally in your browser.</p></details>
-  <details><summary>Which formats can I export?</summary><p>WebP, JPEG and PNG. Quality is adjustable for WebP and JPEG.</p></details>
+<section class="band"><div class="w" style="max-width:760px">
+  <div class="sec-h"><h2>Frequently asked questions</h2></div>
+  <details><summary>Are my images uploaded to a server?</summary><p>No. Editing happens locally in your browser. The AI background remover downloads its model to your device, but your image itself is not uploaded.</p></details>
+  <details><summary>How do I compress an image without losing quality?</summary><p>Export as WebP or JPEG and lower the quality slider a little. Around 75–85% usually looks the same while cutting the file size a lot. The editor shows the real saving.</p></details>
+  <details><summary>Which formats can I export?</summary><p>WebP, JPEG and PNG. You can upload JPG, PNG, WebP, AVIF and GIF. Use PNG or WebP to keep a transparent background.</p></details>
+  <details><summary>Does the background remover work on real photos?</summary><p>Yes. The AI mode handles people, products and animals. The plain-color mode is for white or solid backgrounds only.</p></details>
+  <details><summary>Is there a file size limit?</summary><p>There is no upload limit because nothing is uploaded. Very large images depend on your device memory.</p></details>
   <details><summary>Is PixelForge free?</summary><p>Yes, every tool is free with no signup.</p></details>
 </div></section>
+
+<!-- ===== FINAL CTA ===== -->
+<section class="final"><div class="w">
+  <h2>Ready to edit your first image?</h2><p class="sub">Free, private, and ready in seconds.</p>
+  <button class="btn" style="padding:13px 26px" onclick="file.click()">Upload an image</button>
+</div></section>
+</main>
+
+<!-- ===== ALL TOOLS PAGE ===== -->
+<main id="tp" class="hidden" style="padding-top:60px"><!-- ===== ALL TOOLS ===== -->
+<section id="tools" style="min-height:70vh"><div class="w">
+  <h1 style="font-size:clamp(30px,4.5vw,44px)">All free image tools</h1><p class="sub" style="max-width:640px">Nine browser-based tools to resize, compress, crop, rotate, filter, watermark, convert and cut out backgrounds. Pick one, then upload your image. Nothing leaves your device.</p>
+  <div class="grid">
+    <a class="card" href="#resize" data-t="resize"><i>↔️</i><h3>Resize image</h3><p>Exact pixels or percentage, with aspect lock.</p></a>
+    <a class="card" href="#compress" data-t="compress"><i>🗜️</i><h3>Compress image</h3><p>Shrink JPG, PNG and WebP. See the real saved size.</p></a>
+    <a class="card" href="#crop" data-t="crop"><i>✂️</i><h3>Crop image</h3><p>Drag on the image to select. Free, 1:1, 16:9, 4:3.</p></a>
+    <a class="card" href="#rotate" data-t="rotate"><i>🔄</i><h3>Rotate &amp; flip</h3><p>Turn 90° or mirror horizontally and vertically.</p></a>
+    <a class="card" href="#filters" data-t="filters"><i>🎨</i><h3>Filters</h3><p>Brightness, contrast, saturation, blur, grayscale.</p></a>
+    <a class="card" href="#watermark" data-t="watermark"><i>💧</i><h3>Add watermark</h3><p>Stamp your text with custom size and opacity.</p></a>
+    <a class="card" href="#bg" data-t="bg"><i>🪄</i><h3>Remove background</h3><p>AI cutout for real photos, plus a quick mode for plain backgrounds.</p></a>
+    <a class="card" href="#convert" data-t="convert"><i>🔁</i><h3>Convert format</h3><p>WebP, JPG and PNG conversion.</p></a>
+    <a class="card" href="#base64" data-t="base64"><i>🧬</i><h3>Image to Base64</h3><p>Copy a data URL for CSS, HTML or email.</p></a>
+  </div>
+</div></section>
+
 </main>
 
 <!-- ===== EDITOR ===== -->
@@ -173,7 +246,9 @@ footer .w{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
       <div data-p="rotate"><div class="row"><button id="rl">⟲ 90°</button><button id="rr">⟳ 90°</button></div><div class="row" style="margin-top:8px"><button id="fh">⇋ Flip H</button><button id="fv">⇅ Flip V</button></div></div>
       <div data-p="filters"><label>Brightness</label><input type="range" id="f-b" min="20" max="200" value="100"><label>Contrast</label><input type="range" id="f-c" min="20" max="200" value="100"><label>Saturation</label><input type="range" id="f-s" min="0" max="200" value="100"><label>Blur</label><input type="range" id="f-bl" min="0" max="10" value="0"><label>Grayscale</label><input type="range" id="f-g" min="0" max="100" value="0"><button class="btn" id="doFilter" style="width:100%;margin-top:10px">Apply filters</button></div>
       <div data-p="watermark"><label for="wt">Text</label><input type="text" id="wt" value="© PixelForge"><label>Size</label><input type="range" id="ws" min="2" max="20" value="6"><label>Opacity</label><input type="range" id="wo" min="10" max="100" value="60"><label for="wp">Position</label><select id="wp"><option value="br">Bottom right</option><option value="c">Center</option><option value="bl">Bottom left</option></select><button class="btn" id="doWm" style="width:100%;margin-top:10px">Apply watermark</button></div>
-      <div data-p="bg"><p class="hint">Removes the color touching the image corner (best for white or plain backgrounds).</p><label>Tolerance <b id="tv">30</b></label><input type="range" id="tol" min="5" max="100" value="30"><button class="btn" id="doBg" style="width:100%;margin-top:10px">Remove background</button></div>
+      <div data-p="bg"><button class="btn" id="doAi" style="width:100%">✨ AI remove (works on real photos)</button>
+        <p class="hint" id="aiMsg" style="margin:6px 0 14px">First use downloads a ~40 MB model once. Your image stays on your device.</p>
+        <p class="hint"><b>Or plain color mode:</b> removes the color touching the image corner (white or solid backgrounds).</p><label>Tolerance <b id="tv">30</b></label><input type="range" id="tol" min="5" max="100" value="30"><button class="btn" id="doBg" style="width:100%;margin-top:10px">Remove background</button></div>
       <div data-p="convert" class="hint">Choose the output format below, then download.</div>
       <div data-p="base64"><button class="btn" id="doB64" style="width:100%">Copy Base64 data URL</button></div>
 
@@ -201,8 +276,10 @@ const TOOLS={resize:'Resize',compress:'Compress',crop:'Crop',rotate:'Rotate',fil
 
 /* ===== NAVIGATION ===== */
 $('#tabs').innerHTML=Object.entries(TOOLS).map(([k,v])=>`<button data-tab="${k}">${v}</button>`).join('');
-function showHome(go){$('#ed').classList.add('hidden');$('#home').classList.remove('hidden');(go?$('#'+go):document.body).scrollIntoView()}
-function showEd(t){$('#home').classList.add('hidden');$('#ed').classList.remove('hidden');setTool(t||tool);scrollTo(0,0)}
+const TT={home:'PixelForge – Free Online Image Editor: Resize, Compress, Crop & Remove Background',tp:'All Image Tools – Resize, Compress, Crop, Convert | PixelForge',ed:'Image Editor | PixelForge'};
+function show(id){['home','tp','ed'].forEach(p=>$('#'+p).classList.toggle('hidden',p!=id));document.title=TT[id];scrollTo(0,0)}
+function showHome(go){show(go=='tools'?'tp':'home')}
+function showEd(t){show('ed');setTool(t||tool)}
 function setTool(t){tool=t;$$('[data-tab]').forEach(b=>b.classList.toggle('on',b.dataset.tab==t));$$('[data-p]:not(button)').forEach(p=>p.classList.toggle('hidden',p.dataset.p!=t));
   sel=null;$('#sel').classList.add('hidden');cv.style.filter='';$$('#filters input').forEach(i=>i.value=i.id=='f-bl'||i.id=='f-g'?0:100);
   history.replaceState(null,'','#'+t)}
@@ -275,6 +352,20 @@ $('#doBg').onclick=()=>{const w=cv.width,h=cv.height,d=cx.getImageData(0,0,w,h),
   while(s.length){const n=s.pop();if(seen[n])continue;seen[n]=1;if(!ok(n*4))continue;p[n*4+3]=0;const x=n%w;
     if(x>0)s.push(n-1);if(x<w-1)s.push(n+1);if(n>=w)s.push(n-w);if(n<w*(h-1))s.push(n+w)}
   cx.putImageData(d,0,0);$('#fmt').value='image/png';refresh()};
+
+/* ===== AI BACKGROUND REMOVAL (model loads only when clicked; runs in the browser) ===== */
+$('#doAi').onclick=async()=>{
+  const btn=$('#doAi'),msg=$('#aiMsg');if(!orig)return alert('Upload an image first.');
+  btn.disabled=true;msg.textContent='Loading AI model… (first time only)';
+  try{
+    const {removeBackground}=await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.5.5/+esm');
+    const src=await new Promise(r=>cv.toBlob(r,'image/png'));
+    const res=await removeBackground(src,{output:{format:'image/png'},progress:(k,c,t)=>msg.textContent=(k.startsWith('fetch')?'Downloading model ':'Processing ')+Math.round(c/t*100)+'%'});
+    const bmp=await createImageBitmap(res);hist.push(snap());
+    cx.clearRect(0,0,cv.width,cv.height);cx.drawImage(bmp,0,0,cv.width,cv.height);
+    $('#fmt').value='image/png';refresh();msg.textContent='Done. Export as PNG or WebP to keep transparency.';
+  }catch(e){console.error(e);msg.textContent='AI removal failed. Check your internet connection and try again, or use the plain color mode below.'}
+  btn.disabled=false};
 
 /* ===== EXPORT: real size, download, base64 ===== */
 function out(){const f=$('#fmt').value;if(f!='image/jpeg')return cv;const c=mk(cv.width,cv.height),x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(cv,0,0);return c}
