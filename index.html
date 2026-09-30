@@ -19,13 +19,15 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23080B12'/%3E%3Cpath d='M32 10 52 21v22L32 54 12 43V21z' fill='none' stroke='%2322D3EE' stroke-width='5' stroke-linejoin='round'/%3E%3C/svg%3E">
 <!-- ===== STRUCTURED DATA ===== -->
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebApplication","name":"PixelForge","url":"https://pixelforge-studio-psi.vercel.app/","applicationCategory":"MultimediaApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Are my images uploaded to a server?","acceptedAnswer":{"@type":"Answer","text":"No. Editing happens locally in your browser."}},{"@type":"Question","name":"How do I compress an image without losing quality?","acceptedAnswer":{"@type":"Answer","text":"Export as WebP or JPEG and lower quality slightly, around 75-85 percent."}},{"@type":"Question","name":"Which formats can I export?","acceptedAnswer":{"@type":"Answer","text":"WebP, JPEG and PNG."}},{"@type":"Question","name":"Does the background remover work on real photos?","acceptedAnswer":{"@type":"Answer","text":"Yes, the AI mode handles people, products and animals."}},{"@type":"Question","name":"Is PixelForge free?","acceptedAnswer":{"@type":"Answer","text":"Yes, every tool is free with no signup."}}]}]}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&display=swap">
 <style>
 /* ===== BASE / TOKENS ===== */
 :root{--bg:#080B12;--p:#111827;--p2:#0D1220;--bd:#253148;--t:#F8FAFC;--m:#94A3B8;--c:#22D3EE;--b:#3B82F6;--pu:#8B5CF6;--hh:72px}
 *{box-sizing:border-box;margin:0}html{scroll-behavior:smooth}
-body{background:var(--bg);color:var(--t);font:15px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+body{background:var(--bg);color:var(--t);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 a{color:inherit;text-decoration:none}button,input,select{font:inherit;color:inherit}
-button{cursor:pointer;border:1px solid var(--bd);background:var(--p);border-radius:10px;padding:8px 14px}
+button{cursor:pointer;border:1px solid var(--bd);background:var(--p);border-radius:10px;padding:10px 14px}
 button:hover{border-color:var(--b)}
 :focus-visible{outline:2px solid var(--c);outline-offset:2px}
 .w{max-width:1120px;margin:auto;padding:0 20px}.hidden{display:none!important}
@@ -142,6 +144,12 @@ h2{margin-bottom:10px}.sub{line-height:1.65}.sec-h .sub{margin-bottom:0}.split h
 .sz .ic{background:none!important;width:42px;height:42px;display:block;margin-bottom:8px}.sz .ic svg{width:42px;height:42px;display:block;border-radius:11px;box-shadow:0 0 0 1px #ffffff1f}
 .steps .st{text-align:center}.steps .st i{width:58px;height:58px;border-radius:16px;background:#3B82F61f;display:grid;place-items:center;margin:0 auto 14px;font-size:26px}
 .uc svg{width:100%;height:auto;border-radius:12px;margin-bottom:14px;display:block}
+/* ===== v5: heading font, live size card ===== */
+h1,h2,h3,h4,.logo{font-family:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;font-weight:700;letter-spacing:.01em}
+h1{font-size:clamp(34px,4.6vw,54px);line-height:1.05}h2{font-size:clamp(28px,3.8vw,40px)}.card h3,.pop h3{font-size:21px}.logo{font-size:23px}footer h4{font-size:17px}
+.cs{background:var(--p2);border:1px solid var(--bd);border-radius:12px;padding:14px;text-align:center;margin-bottom:8px;font-size:13px;color:var(--m)}
+.csn{display:flex;justify-content:center;gap:10px;align-items:baseline;font-size:15px;margin-bottom:8px}.csn b{font-size:22px}.csn i{font-style:normal}
+.csb{height:8px;border-radius:9px;background:#1e293b;overflow:hidden;margin-bottom:8px}.csb em{display:block;height:100%;border-radius:9px;transition:width .2s}
 </style>
 </head>
 <body>
@@ -265,15 +273,15 @@ h2{margin-bottom:10px}.sub{line-height:1.65}.sec-h .sub{margin-bottom:0}.split h
         <label><input type="checkbox" id="lock" checked> Keep aspect ratio</label>
         <div class="row" style="margin:8px 0"><button data-s=".25">25%</button><button data-s=".5">50%</button><button data-s=".75">75%</button><button data-s="2">200%</button></div>
         <label for="rm">Fit mode</label><select id="rm"><option value="stretch">Stretch to size</option><option value="cover">Fill &amp; crop (keeps ratio)</option><option value="contain">Fit inside (adds empty space)</option></select><button class="btn" id="doResize" style="width:100%;margin-top:10px">Apply resize</button></div>
-      <div data-p="compress"><div class="row"><button data-q="50">Smallest</button><button data-q="75">Balanced</button><button data-q="90">Best</button></div><p class="hint" style="margin-top:8px">Pick a preset or use the quality slider below. JPG and WebP shrink most; PNG is lossless, so switch to WebP for smaller files.</p></div>
+      <div data-p="compress"><div class="cs" id="cs">Upload an image to see the live size.</div><label>Quality <b id="qv2">80</b>%</label><input type="range" id="q2" min="5" max="100" value="80"><div class="row" style="margin-top:8px"><button data-q="50">Smallest</button><button data-q="75">Balanced</button><button data-q="90">Best</button></div><p class="hint" style="margin-top:8px">Move the slider and watch the size change live. JPG and WebP shrink most; PNG ignores quality, so pick WebP or JPEG.</p></div>
       <div data-p="crop"><div class="row" style="flex-wrap:wrap"><button data-r="0" class="on">Free</button><button data-r="1">1:1</button><button data-r="0.8">4:5</button><button data-r="1.333">4:3</button><button data-r="1.777">16:9</button><button data-r="0.5625">9:16</button></div>
         <p class="hint" style="margin:8px 0">Drag the box to move it. Drag a corner to resize it.</p><button class="btn" id="doCrop" style="width:100%">Apply crop</button></div>
       <div data-p="rotate"><div class="row"><button id="rl">⟲ 90°</button><button id="rr">⟳ 90°</button></div><div class="row" style="margin-top:8px"><button id="fh">⇋ Flip H</button><button id="fv">⇅ Flip V</button></div></div>
-      <div data-p="filters"><label>Brightness</label><input type="range" id="f-b" min="20" max="200" value="100"><label>Contrast</label><input type="range" id="f-c" min="20" max="200" value="100"><label>Saturation</label><input type="range" id="f-s" min="0" max="200" value="100"><label>Blur</label><input type="range" id="f-bl" min="0" max="10" value="0"><label>Grayscale</label><input type="range" id="f-g" min="0" max="100" value="0"><button class="btn" id="doFilter" style="width:100%;margin-top:10px">Apply filters</button></div>
-      <div data-p="watermark"><label for="wt">Text</label><input type="text" id="wt" value="© PixelForge"><label>Size</label><input type="range" id="ws" min="2" max="20" value="6"><label>Opacity</label><input type="range" id="wo" min="10" max="100" value="60"><label for="wp">Position</label><select id="wp"><option value="br">Bottom right</option><option value="c">Center</option><option value="bl">Bottom left</option></select><button class="btn" id="doWm" style="width:100%;margin-top:10px">Apply watermark</button></div>
+      <div data-p="filters"><label>Brightness</label><input type="range" id="f-b" min="20" max="200" value="100"><label>Contrast</label><input type="range" id="f-c" min="20" max="200" value="100"><label>Saturation</label><input type="range" id="f-s" min="0" max="200" value="100"><label>Blur</label><input type="range" id="f-bl" min="0" max="10" value="0"><label>Grayscale</label><input type="range" id="f-g" min="0" max="100" value="0"><div class="row" style="margin-top:10px"><button id="fReset">Reset</button><button class="btn" id="doFilter">Save filters</button></div></div>
+      <div data-p="watermark"><p class="hint">Type or move a slider to preview. Save keeps it. Changing it again replaces the watermark.</p><label for="wt">Text</label><input type="text" id="wt" value="© PixelForge"><label>Size</label><input type="range" id="ws" min="2" max="20" value="6"><label>Opacity</label><input type="range" id="wo" min="10" max="100" value="60"><label for="wp">Position</label><select id="wp"><option value="br">Bottom right</option><option value="c">Center</option><option value="bl">Bottom left</option></select><button class="btn" id="doWm" style="width:100%;margin-top:10px">Apply watermark</button></div>
       <div data-p="bg"><button class="btn" id="doAi" style="width:100%">✨ AI remove (works on real photos)</button>
         <p class="hint" id="aiMsg" style="margin:6px 0 14px">First use downloads a ~40 MB model once. Your image stays on your device.</p>
-        <p class="hint"><b>Or plain color mode:</b> removes the color touching the image corner (white or solid backgrounds).</p><label>Tolerance <b id="tv">30</b></label><input type="range" id="tol" min="5" max="100" value="30"><button class="btn" id="doBg" style="width:100%;margin-top:10px">Remove background</button></div>
+        <p class="hint"><b>Or color mode:</b> click the background on the image to pick its color, then press Remove. Repeat it to remove more colors.</p><div class="row" style="align-items:center"><span id="bgsw" style="flex:0 0 32px;height:32px;border-radius:8px;border:1px solid var(--bd);display:block"></span><span class="hint" id="bgmsg" style="flex:1">No color picked (uses the corner color).</span></div><label><input type="checkbox" id="bgall"> Remove this color everywhere, not only connected</label><label>Tolerance <b id="tv">30</b></label><input type="range" id="tol" min="5" max="100" value="30"><button class="btn" id="doBg" style="width:100%;margin-top:10px">Remove background</button></div>
       <div data-p="convert" class="hint">Choose the output format below, then download.</div>
       <div data-p="base64"><button class="btn" id="doB64" style="width:100%">Copy Base64 data URL</button></div>
 
@@ -313,9 +321,9 @@ function go(fn,l){if(!l)return fn();$('#ldt').textContent=l;$('#ld').classList.r
 function resetEd(){orig=null;hist=[];cv.width=cv.height=1;cv.style.filter='';$('#box').classList.add('hidden');$('#sel').classList.add('hidden');$('#empty').classList.remove('hidden');$('#dim').textContent='';$('#stat').textContent='Upload an image to see sizes.';file.value=''}
 let pre=null;function applyPre(){if(pre){$('#lock').checked=false;$('#w').value=pre[0];$('#h').value=pre[1];$('#rm').value='cover';pre=null}}
 function showEd(t){show('ed');setTool(t||tool)}
-function setTool(t){tool=t;$$('[data-tab]').forEach(b=>b.classList.toggle('on',b.dataset.tab==t));$$('[data-p]:not(button)').forEach(p=>p.classList.toggle('hidden',p.dataset.p!=t));
-  sel=null;$('#sel').classList.add('hidden');cv.style.filter='';$$('#filters input').forEach(i=>i.value=i.id=='f-bl'||i.id=='f-g'?0:100);
-  history.replaceState(null,'','#'+t);$('#et').textContent=TOOLS[t];if(t=='crop'&&orig)cropInit()}
+function setTool(t){if(t!='watermark')endWm();tool=t;$$('[data-tab]').forEach(b=>b.classList.toggle('on',b.dataset.tab==t));$$('[data-p]:not(button)').forEach(p=>p.classList.toggle('hidden',p.dataset.p!=t));
+  sel=null;$('#sel').classList.add('hidden');cv.style.filter='';fIn.forEach(i=>i.value=fDef[i.id]);cv.style.cursor=t=='bg'?'crosshair':'';
+  history.replaceState(null,'','#'+t);$('#et').textContent=TOOLS[t];if(t=='crop'&&orig)cropInit();if(t=='compress')stat()}
 document.addEventListener('click',e=>{const a=e.target.closest('[data-t],[data-tab],[data-home]');if(!a)return;
   if(a.dataset.tab)return setTool(a.dataset.tab);e.preventDefault();
   if(a.dataset.t){const k=a.dataset.t;if(!$('#ed').classList.contains('hidden'))return setTool(k);go(()=>{resetEd();showEd(k)},'Opening '+TOOLS[k]+'…')}
@@ -341,7 +349,7 @@ function restore(c){cv.width=c.width;cv.height=c.height;cx.drawImage(c,0,0);refr
 $('#undo').onclick=()=>hist.length&&restore(hist.pop());
 $('#reset').onclick=()=>orig&&(hist=[],restore(orig));
 document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key=='z'&&!$('#ed').classList.contains('hidden')){e.preventDefault();$('#undo').click()}});
-function refresh(){$('#w').value=cv.width;$('#h').value=cv.height;$('#dim').textContent=`${cv.width} × ${cv.height} px`;$('#sel').classList.add('hidden');if(tool=='crop'&&orig&&!$('#ed').classList.contains('hidden'))cropInit();stat()}
+function refresh(){wmBase=null;wmHist=false;$('#w').value=cv.width;$('#h').value=cv.height;$('#dim').textContent=`${cv.width} × ${cv.height} px`;$('#sel').classList.add('hidden');if(tool=='crop'&&orig&&!$('#ed').classList.contains('hidden'))cropInit();stat()}
 
 /* ===== RESIZE ===== */
 $('#w').oninput=e=>$('#lock').checked&&($('#h').value=Math.round(e.target.value*cv.height/cv.width));
@@ -378,50 +386,65 @@ $('#rr').onclick=()=>rot(1);$('#rl').onclick=()=>rot(-1);
 const flip=(x,y)=>edit(cv.width,cv.height,c=>{c.translate(x<0?cv.width:0,y<0?cv.height:0);c.scale(x,y);c.drawImage(cv,0,0)});
 $('#fh').onclick=()=>flip(-1,1);$('#fv').onclick=()=>flip(1,-1);
 
-/* ===== FILTERS (live preview via CSS, baked on apply) ===== */
-const fStr=()=>`brightness(${$('#f-b').value}%) contrast(${$('#f-c').value}%) saturate(${$('#f-s').value}%) blur(${$('#f-bl').value}px) grayscale(${$('#f-g').value}%)`;
-$$('#filters input').forEach(i=>i.oninput=()=>cv.style.filter=fStr());
-$('#doFilter').onclick=()=>{const f=fStr();cv.style.filter='';edit(cv.width,cv.height,c=>{c.filter=f;c.drawImage(cv,0,0)})};
+/* ===== FILTERS (live preview, Save bakes them in) ===== */
+const fIn=$$('[data-p="filters"] input'),fDef={'f-b':100,'f-c':100,'f-s':100,'f-bl':0,'f-g':0};
+const fDirty=()=>fIn.some(i=>+i.value!=fDef[i.id]);
+const fStr=w=>`brightness(${$('#f-b').value}%) contrast(${$('#f-c').value}%) saturate(${$('#f-s').value}%) blur(${(+$('#f-bl').value*w/500).toFixed(2)}px) grayscale(${$('#f-g').value}%)`;
+const fLive=()=>{cv.style.filter=fDirty()?fStr(cv.clientWidth):'';stat()};
+fIn.forEach(i=>i.oninput=fLive);
+$('#fReset').onclick=()=>{fIn.forEach(i=>i.value=fDef[i.id]);fLive()};
+$('#doFilter').onclick=()=>{if(!orig)return alert('Upload an image first.');if(!fDirty())return;if(!('filter' in CanvasRenderingContext2D.prototype))return alert('This browser cannot save filters. Try Chrome, Edge or Firefox.');
+  const f=fStr(cv.width);cv.style.filter='';edit(cv.width,cv.height,c=>{c.filter=f;c.drawImage(cv,0,0)});fIn.forEach(i=>i.value=fDef[i.id])};
 
-/* ===== WATERMARK ===== */
-$('#doWm').onclick=()=>edit(cv.width,cv.height,c=>{const s=cv.width*$('#ws').value/100,p=s*.6,pos=$('#wp').value;c.drawImage(cv,0,0);
-  c.font=`700 ${s}px system-ui,sans-serif`;c.globalAlpha=$('#wo').value/100;c.fillStyle='#fff';c.strokeStyle='#0008';c.lineWidth=s/12;c.textBaseline='bottom';
-  c.textAlign=pos=='br'?'right':pos=='bl'?'left':'center';const x=pos=='br'?cv.width-p:pos=='bl'?p:cv.width/2,y=pos=='c'?cv.height/2+s/2:cv.height-p;
-  c.strokeText($('#wt').value,x,y);c.fillText($('#wt').value,x,y)});
+/* ===== WATERMARK (live preview, replaces instead of stacking) ===== */
+let wmBase=null,wmHist=false;
+function wmDraw(){if(!orig)return;if(!wmBase)wmBase=snap();const w=wmBase.width,h=wmBase.height,s=w*$('#ws').value/100,p=s*.6,pos=$('#wp').value,tx=$('#wt').value;
+  cv.width=w;cv.height=h;cx.drawImage(wmBase,0,0);if(tx.trim()){cx.save();cx.font=`700 ${s}px system-ui,sans-serif`;cx.globalAlpha=$('#wo').value/100;cx.fillStyle='#fff';cx.strokeStyle='#0008';cx.lineWidth=s/12;cx.textBaseline='bottom';
+  cx.textAlign=pos=='br'?'right':pos=='bl'?'left':'center';const x=pos=='br'?w-p:pos=='bl'?p:w/2,y=pos=='c'?h/2+s/2:h-p;cx.strokeText(tx,x,y);cx.fillText(tx,x,y);cx.restore()}stat()}
+function endWm(){if(wmBase&&!wmHist)restore(wmBase);wmBase=null;wmHist=false}
+['wt','ws','wo','wp'].forEach(i=>['input','change'].forEach(ev=>$('#'+i).addEventListener(ev,wmDraw)));
+$('#doWm').onclick=()=>{if(!orig)return alert('Upload an image first.');wmDraw();if(!wmHist&&wmBase){hist.push(wmBase);wmHist=true}$('#dim').textContent='Watermark saved ✓'};
 
-/* ===== REMOVE SOLID BACKGROUND (flood fill from the edges) ===== */
-$('#tol').oninput=e=>$('#tv').textContent=e.target.value;
-$('#doBg').onclick=()=>{if(!orig)return alert('Upload an image first.');const w=cv.width,h=cv.height,d=cx.getImageData(0,0,w,h),p=d.data,t=$('#tol').value*3,c=[p[0],p[1],p[2]],seen=new Uint8Array(w*h),s=[];
-  hist.push(snap());
-  const ok=i=>Math.abs(p[i]-c[0])+Math.abs(p[i+1]-c[1])+Math.abs(p[i+2]-c[2])<=t;
-  for(let x=0;x<w;x++)s.push(x,x+(h-1)*w);for(let y=0;y<h;y++)s.push(y*w,y*w+w-1);
-  while(s.length){const n=s.pop();if(seen[n])continue;seen[n]=1;if(!ok(n*4))continue;p[n*4+3]=0;const x=n%w;
-    if(x>0)s.push(n-1);if(x<w-1)s.push(n+1);if(n>=w)s.push(n-w);if(n<w*(h-1))s.push(n+w)}
-  cx.putImageData(d,0,0);$('#fmt').value='image/png';refresh()};
+/* ===== REMOVE BACKGROUND: click to pick a color, then remove ===== */
+let bgPick=null;$('#tol').oninput=e=>$('#tv').textContent=e.target.value;
+cv.addEventListener('pointerdown',e=>{if(tool!='bg'||!orig)return;const[X,Y]=pt(e),x=cl(X|0,0,cv.width-1),y=cl(Y|0,0,cv.height-1),d=cx.getImageData(x,y,1,1).data;
+  if(!d[3]){$('#bgmsg').textContent='That area is already transparent.';return}
+  bgPick={x,y,c:[d[0],d[1],d[2]]};$('#bgsw').style.background=`rgb(${d[0]},${d[1]},${d[2]})`;$('#bgmsg').textContent='Color picked. Press Remove.'});
+$('#doBg').onclick=()=>{if(!orig)return alert('Upload an image first.');
+  const w=cv.width,h=cv.height,d=cx.getImageData(0,0,w,h),p=d.data,tl=$('#tol').value*3;let c=bgPick?bgPick.c:null;
+  if(!c)for(const[x,y]of[[0,0],[w-1,0],[0,h-1],[w-1,h-1]]){const i=(y*w+x)*4;if(p[i+3]){c=[p[i],p[i+1],p[i+2]];break}}
+  if(!c)return $('#bgmsg').textContent='Nothing to remove. Click a background color on the image first.';
+  const m=i=>Math.abs(p[i]-c[0])+Math.abs(p[i+1]-c[1])+Math.abs(p[i+2]-c[2])<=tl,ok=i=>!p[i+3]||m(i);hist.push(snap());
+  if($('#bgall').checked){for(let i=0;i<p.length;i+=4)if(p[i+3]&&m(i))p[i+3]=0}
+  else{const seen=new Uint8Array(w*h),s=[];if(bgPick)s.push(bgPick.y*w+bgPick.x);else{for(let x=0;x<w;x++)s.push(x,x+(h-1)*w);for(let y=0;y<h;y++)s.push(y*w,y*w+w-1)}
+    while(s.length){const n=s.pop();if(seen[n])continue;seen[n]=1;const i=n*4;if(!ok(i))continue;p[i+3]=0;const x=n%w;if(x>0)s.push(n-1);if(x<w-1)s.push(n+1);if(n>=w)s.push(n-w);if(n<w*(h-1))s.push(n+w)}}
+  cx.putImageData(d,0,0);if($('#fmt').value=='image/jpeg')$('#fmt').value='image/png';refresh();bgPick=null;$('#bgsw').style.background='';$('#bgmsg').textContent='Removed. Pick another color to remove more.'};
 
-/* ===== AI BACKGROUND REMOVAL (model loads only when clicked; runs in the browser) ===== */
-$('#doAi').onclick=async()=>{
-  const btn=$('#doAi'),msg=$('#aiMsg');if(!orig)return alert('Upload an image first.');
-  btn.disabled=true;msg.textContent='Loading AI model… (first time only)';
+/* ===== AI BACKGROUND REMOVAL (library loads only when clicked; runs in the browser) ===== */
+$('#doAi').onclick=async()=>{const btn=$('#doAi'),msg=$('#aiMsg');if(!orig)return alert('Upload an image first.');
+  btn.disabled=true;msg.textContent='Loading AI library…';
   try{
-    const {removeBackground}=await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.5.5/+esm');
+    if(!window.__rb){let err;for(const u of['https://esm.sh/@imgly/background-removal@1.6.0','https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.6.0/+esm','https://esm.sh/@imgly/background-removal@1.5.5']){
+      try{window.__rb=(await import(u)).removeBackground;if(window.__rb)break}catch(e){err=e}}
+      if(!window.__rb)throw err||new Error('library could not be loaded')}
     const src=await new Promise(r=>cv.toBlob(r,'image/png'));
-    const res=await removeBackground(src,{output:{format:'image/png'},progress:(k,c,t)=>msg.textContent=(k.startsWith('fetch')?'Downloading model ':'Processing ')+Math.round(c/t*100)+'%'});
-    const bmp=await createImageBitmap(res);hist.push(snap());
-    cx.clearRect(0,0,cv.width,cv.height);cx.drawImage(bmp,0,0,cv.width,cv.height);
+    const res=await window.__rb(src,{output:{format:'image/png'},progress:(k,c,t)=>msg.textContent=(k.startsWith('fetch')?'Downloading AI model ':'Processing ')+Math.round(c/t*100)+'%'});
+    const bmp=await createImageBitmap(res);hist.push(snap());cx.clearRect(0,0,cv.width,cv.height);cx.drawImage(bmp,0,0,cv.width,cv.height);
     $('#fmt').value='image/png';refresh();msg.textContent='Done. Export as PNG or WebP to keep transparency.';
-  }catch(e){console.error(e);msg.textContent='AI removal failed. Check your internet connection and try again, or use the plain color mode below.'}
+  }catch(e){console.error(e);msg.textContent='AI removal failed: '+((e&&e.message)||e)+'. Check your connection or use color mode below.'}
   btn.disabled=false};
 
 /* ===== EXPORT: real size, download, base64 ===== */
-function out(){const f=$('#fmt').value;if(f!='image/jpeg')return cv;const c=mk(cv.width,cv.height),x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(cv,0,0);return c}
-function stat(){clearTimeout(tm);tm=setTimeout(()=>{if(!orig)return;out().toBlob(b=>{if(!b)return;const d=Math.round((1-b.size/origSize)*100);
-  $('#stat').innerHTML=`Original file: <b>${fmtB(origSize)}</b><br>Output: <b>${fmtB(b.size)}</b> ${d>0?`(${d}% smaller)`:`(${-d}% larger)`}`},250)},0)}
-$('#q').oninput=e=>{$('#qv').textContent=e.target.value;stat()};$('#fmt').onchange=stat;
+function out(){const f=$('#fmt').value,fp=fDirty()?fStr(cv.width):'';if(f!='image/jpeg'&&!fp)return cv;const c=mk(cv.width,cv.height),x=c.getContext('2d');if(f=='image/jpeg'){x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height)}if(fp)x.filter=fp;x.drawImage(cv,0,0);return c}
+function stat(){clearTimeout(tm);tm=setTimeout(()=>{if(!orig)return;const f=$('#fmt').value;out().toBlob(b=>{if(!b)return;const r=b.size/origSize,d=Math.round((1-r)*100),sm=d>=0,col=sm?'#34D399':'#F87171',tx=sm?`${d}% smaller`:`${-d}% larger`;
+  $('#stat').innerHTML=`Original: <b>${fmtB(origSize)}</b><br>Output: <b>${fmtB(b.size)}</b> (${tx})`;
+  $('#cs').innerHTML=`<div class="csn"><span>${fmtB(origSize)}</span><i>→</i><b style="color:${col}">${fmtB(b.size)}</b></div><div class="csb"><em style="width:${Math.min(100,Math.round(r*100))}%;background:${col}"></em></div><div style="color:${col};font-weight:700">${tx}</div>${f=='image/png'?'<div class="hint" style="margin-top:6px">PNG ignores quality. Choose WebP or JPEG to shrink.</div>':''}`},f,$('#q').value/100)},120)}
+const setQ=v=>{$('#q').value=v;$('#q2').value=v;$('#qv').textContent=$('#qv2').textContent=v;stat()};
+$('#q').oninput=e=>setQ(e.target.value);$('#q2').oninput=e=>setQ(e.target.value);$('#fmt').onchange=stat;
 $('#dl').onclick=()=>{if(!orig)return alert('Upload an image first.');const f=$('#fmt').value,ext={ 'image/webp':'webp','image/jpeg':'jpg','image/png':'png'}[f];
   out().toBlob(b=>{const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(b),download:`${fname}-pixelforge.${ext}`});a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1e3)},f,$('#q').value/100)};
 $('#doB64').onclick=()=>{const u=out().toDataURL($('#fmt').value,$('#q').value/100);navigator.clipboard.writeText(u).then(()=>alert('Base64 data URL copied.'),()=>alert('Copy blocked by the browser.'))};
-$$('[data-q]').forEach(b=>b.onclick=()=>{$('#q').value=b.dataset.q;$('#qv').textContent=b.dataset.q;if($('#fmt').value=='image/png')$('#fmt').value='image/webp';stat()});
+$$('[data-q]').forEach(b=>b.onclick=()=>{if($('#fmt').value=='image/png')$('#fmt').value='image/webp';setQ(b.dataset.q)});
 resetEd();
 </script>
 </body>
