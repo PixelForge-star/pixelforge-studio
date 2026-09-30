@@ -281,7 +281,7 @@ h1{font-size:clamp(34px,4.6vw,54px);line-height:1.05}h2{font-size:clamp(28px,3.8
       <div data-p="watermark"><p class="hint">Type or move a slider to preview. Save keeps it. Changing it again replaces the watermark.</p><label for="wt">Text</label><input type="text" id="wt" value="© PixelForge"><label>Size</label><input type="range" id="ws" min="2" max="20" value="6"><label>Opacity</label><input type="range" id="wo" min="10" max="100" value="60"><label for="wp">Position</label><select id="wp"><option value="br">Bottom right</option><option value="c">Center</option><option value="bl">Bottom left</option></select><button class="btn" id="doWm" style="width:100%;margin-top:10px">Apply watermark</button></div>
       <div data-p="bg"><button class="btn" id="doAi" style="width:100%">✨ AI remove (works on real photos)</button>
         <p class="hint" id="aiMsg" style="margin:6px 0 14px">First use downloads a ~40 MB model once. Your image stays on your device.</p>
-        <p class="hint"><b>Or color mode:</b> click the background on the image to pick its color, then press Remove. Repeat it to remove more colors.</p><div class="row" style="align-items:center"><span id="bgsw" style="flex:0 0 32px;height:32px;border-radius:8px;border:1px solid var(--bd);display:block"></span><span class="hint" id="bgmsg" style="flex:1">No color picked (uses the corner color).</span></div><label><input type="checkbox" id="bgall"> Remove this color everywhere, not only connected</label><label>Tolerance <b id="tv">25</b></label><input type="range" id="tol" min="5" max="60" value="25"><button class="btn" id="doBg" style="width:100%;margin-top:10px">Remove background</button></div>
+        <p class="hint"><b>Or color mode:</b> click the background on the image to pick its color, then press Remove. Repeat it to remove more colors.</p><div class="row" style="align-items:center"><span id="bgsw" style="flex:0 0 32px;height:32px;border-radius:8px;border:1px solid var(--bd);display:block"></span><span class="hint" id="bgmsg" style="flex:1">No color picked (uses the corner color).</span></div><label><input type="checkbox" id="bgall"> Remove this color everywhere, not only connected</label><label>Tolerance <b id="tv">20</b></label><input type="range" id="tol" min="1" max="60" value="20"><button class="btn" id="doBg" style="width:100%;margin-top:10px">Remove background</button></div>
       <div data-p="convert" class="hint">Choose the output format below, then download.</div>
       <div data-p="base64"><button class="btn" id="doB64" style="width:100%">Copy Base64 data URL</button></div>
 
@@ -411,12 +411,13 @@ cv.addEventListener('pointerdown',e=>{if(tool!='bg'||!orig)return;const[X,Y]=pt(
   if(!d[3]){$('#bgmsg').textContent='That area is already transparent.';return}
   bgPick={x,y,c:[d[0],d[1],d[2]]};$('#bgsw').style.background=`rgb(${d[0]},${d[1]},${d[2]})`;$('#bgmsg').textContent='Color picked. Press Remove.'});
 $('#doBg').onclick=()=>{if(!orig)return alert('Upload an image first.');
-  const w=cv.width,h=cv.height,d=cx.getImageData(0,0,w,h),p=d.data,tl=$('#tol').value*2;let c=bgPick?bgPick.c:null;
-  if(!c)for(const[x,y]of[[0,0],[w-1,0],[0,h-1],[w-1,h-1]]){const i=(y*w+x)*4;if(p[i+3]){c=[p[i],p[i+1],p[i+2]];break}}
-  if(!c)return $('#bgmsg').textContent='Nothing to remove. Click a background color on the image first.';
+  const w=cv.width,h=cv.height,d=cx.getImageData(0,0,w,h),p=d.data,tl=765*Math.pow($('#tol').value/100,2)*.5;let sd=bgPick;
+  if(!sd)for(const[ax,ay,dx,dy]of[[0,0,1,1],[w-1,0,-1,1],[0,h-1,1,-1],[w-1,h-1,-1,-1]]){for(let k=0;k<Math.min(w,h)/2&&!sd;k++){const x=ax+dx*k,y=ay+dy*k,i=(y*w+x)*4;if(p[i+3])sd={x,y,c:[p[i],p[i+1],p[i+2]]}}if(sd)break}
+  if(!sd)return $('#bgmsg').textContent='Nothing left to remove near the edges. Click a color on the image to pick it.';
+  const c=sd.c;
   const m=i=>Math.abs(p[i]-c[0])+Math.abs(p[i+1]-c[1])+Math.abs(p[i+2]-c[2])<=tl,ok=i=>!p[i+3]||m(i),before=(()=>{let n=0;for(let i=3;i<p.length;i+=4)if(p[i])n++;return n})();
   if($('#bgall').checked){for(let i=0;i<p.length;i+=4)if(p[i+3]&&m(i))p[i+3]=0}
-  else{const seen=new Uint8Array(w*h),s=[];if(bgPick)s.push(bgPick.y*w+bgPick.x);else{for(let x=0;x<w;x++)s.push(x,x+(h-1)*w);for(let y=0;y<h;y++)s.push(y*w,y*w+w-1)}
+  else{const seen=new Uint8Array(w*h),s=[];if(bgPick)s.push(bgPick.y*w+bgPick.x);else{s.push(sd.y*w+sd.x);for(let x=0;x<w;x++)s.push(x,x+(h-1)*w);for(let y=0;y<h;y++)s.push(y*w,y*w+w-1)}
     while(s.length){const n=s.pop();if(seen[n])continue;seen[n]=1;const i=n*4;if(!ok(i))continue;p[i+3]=0;const x=n%w;if(x>0)s.push(n-1);if(x<w-1)s.push(n+1);if(n>=w)s.push(n-w);if(n<w*(h-1))s.push(n+w)}}
   let after=0;for(let i=3;i<p.length;i+=4)if(p[i])after++;if(after<before*.01)return $('#bgmsg').textContent='Tolerance is too high, it would erase almost the whole image. Lower it and try again.';hist.push(snap());cx.putImageData(d,0,0);if($('#fmt').value=='image/jpeg')$('#fmt').value='image/png';refresh();bgPick=null;$('#bgsw').style.background='';$('#bgmsg').textContent='Removed. Pick another color to remove more, or press Undo to go back.'};
 
