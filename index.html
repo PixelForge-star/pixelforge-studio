@@ -424,7 +424,7 @@ $('#doBg').onclick=()=>{if(!orig)return alert('Upload an image first.');
 const RB=[['https://esm.sh/@imgly/background-removal@1.5.5',null],['https://esm.sh/@imgly/background-removal@1.5.5','https://unpkg.com/@imgly/background-removal-data@1.5.5/dist/'],['https://esm.sh/@imgly/background-removal@1.5.5','https://cdn.jsdelivr.net/npm/@imgly/background-removal-data@1.5.5/dist/'],['https://esm.sh/@imgly/background-removal@1.6.0',null]];
 $('#doAi').onclick=async()=>{const btn=$('#doAi'),msg=$('#aiMsg');if(!orig)return alert('Upload an image first.');
   btn.disabled=true;msg.textContent='Loading AI…';const errs=[];let res;const src=await new Promise(r=>cv.toBlob(r,'image/png'));
-  for(const[u,pp]of RB){try{const cfg={output:{format:'image/png'},progress:(k,c,t)=>msg.textContent=(k.startsWith('fetch')?'Downloading AI model ':'Processing ')+Math.round(c/t*100)+'%'};if(pp)cfg.publicPath=pp;
+  for(const[u,pp]of RB){try{const cfg={output:{format:'image/png'},progress:(k,c,t)=>{msg.textContent=(k.startsWith('fetch')?'Downloading AI model ':'Processing ')+Math.round(c/t*100)+'%'}};if(pp)cfg.publicPath=pp;
     res=await(await import(u)).removeBackground(src,cfg);break}catch(e){console.warn('AI source failed',u,pp,e);errs.push(((e&&e.message)||e)+'');msg.textContent='Trying another server…'}}
   if(res){const bmp=await createImageBitmap(res);hist.push(snap());cx.clearRect(0,0,cv.width,cv.height);cx.drawImage(bmp,0,0,cv.width,cv.height);$('#fmt').value='image/png';refresh();msg.textContent='Done. Export as PNG or WebP to keep transparency.'}
   else msg.textContent='AI model could not be downloaded ('+errs[0]+'). This usually means a blocked network, firewall, VPN or ad blocker. Try another network, or use color mode below.';
