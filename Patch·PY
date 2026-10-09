@@ -1,0 +1,84 @@
+#!/usr/bin/env python3
+"""PixelForge fix patch.
+Usage:  python3 patch.py index.html      (creates index.html.bak, then patches in place)
+Fixes: CLS 0.278 (font swap), render-blocking Google Fonts, hash URLs -> real URLs,
+per-page title/description/canonical, per-tool H1 + how-to + FAQ content."""
+import sys, shutil
+
+path = sys.argv[1] if len(sys.argv) > 1 else "index.html"
+s = open(path, encoding="utf-8").read().replace("\r\n", "\n")
+shutil.copy(path, path + ".bak")
+
+def rep(old, new, count=None):
+    global s
+    n = s.count(old)
+    if n == 0 or (count and n != count):
+        sys.exit(f"STOP: expected {count or '>=1'} match(es), found {n} for:\n  {old[:90]}")
+    s = s.replace(old, new)
+
+# ---------- 1. FONT: non-blocking + no swap shift (fixes CLS + render-blocking) ----------
+F = "https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&display=optional"
+rep('<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&display=swap">',
+    f'<link rel="preload" as="style" href="{F}" onload="this.onload=null;this.rel=\'stylesheet\'">'
+    f'<noscript><link rel="stylesheet" href="{F}"></noscript>', 1)
+rep('"Barlow Condensed","Arial Narrow",system-ui', '"Barlow Condensed","Arial Narrow","sans-serif-condensed",system-ui')
+
+# ---------- 2. Remove useless meta keywords ----------
+import re
+s, n = re.subn(r'<meta name="keywords"[^>]*>\n?', '', s)
+if n != 1: sys.exit("STOP: meta keywords not found")
+
+# ---------- 3. Real URLs instead of #hash ----------
+PATHS = {"resize":"/resize-image","compress":"/compress-image","crop":"/crop-image","rotate":"/rotate-flip-image",
+         "filters":"/image-filters","watermark":"/add-watermark-to-image","bg":"/remove-background",
+         "convert":"/convert-image-format","base64":"/image-to-base64"}
+for k, p in PATHS.items():
+    rep(f'href="#{k}" data-t="{k}"', f'href="{p}" data-t="{k}"')
+rep('href="#" ', 'href="/" ')
+rep('href="#tools" ', 'href="/tools" ')
+
+# ---------- 4. Info section (H1 + how-to + FAQ per tool) ----------
+rep('<!-- ===== FOOTER ===== -->',
+    '<section id="info" class="w hidden" style="max-width:860px;padding:40px 20px 56px"></section>\n<!-- ===== FOOTER ===== -->', 1)
+
+# ---------- 5. Router + SEO data ----------
+BLOCK = r"""/* ===== ROUTING + PER-PAGE SEO ===== */
+const PATHS={resize:'/resize-image',compress:'/compress-image',crop:'/crop-image',rotate:'/rotate-flip-image',filters:'/image-filters',watermark:'/add-watermark-to-image',bg:'/remove-background',convert:'/convert-image-format',base64:'/image-to-base64'};
+const HP={home:'/',tp:'/tools'};
+const HOME_D='Free online image editor: resize, compress, crop, rotate, remove background, add watermark and convert JPG, PNG, WebP. Runs in your browser – no upload, no signup.';
+const TOOLS_D='Nine free browser-based image tools: resize, compress, crop, rotate, filters, watermark, background remover, format converter and Base64. Nothing is uploaded.';
+/* [title, meta description, intro, steps, faqs] */
+const T={
+resize:["Resize Image Online – Free Pixel & Percentage Resizer","Resize any JPG, PNG or WebP to exact pixels or a percentage. Free, private, runs in your browser with no upload.","Change the width and height of any JPG, PNG or WebP image to exact pixels, or scale it by percentage. Everything runs in your browser, so your photo is never uploaded.",["Upload your image.","Enter a new width and height or tap a percentage. Keep the aspect ratio locked to avoid stretching.","Pick Fill & crop, Fit or Stretch, press Apply resize, then download."],[["How do I resize an image without losing quality?","Scale down rather than up, keep the aspect ratio locked and export as WebP or PNG at high quality. Enlarging a small image always softens it."],["What size should I use for Instagram?","Use 1080 × 1080 px for square posts and 1080 × 1920 px for Stories. The social size buttons on the home page set these for you."]]],
+compress:["Compress Image Online – Reduce JPG, PNG & WebP Size","Compress images online and see the real file size before you download. Free, private, no upload, no signup.","Make photos smaller for faster websites, email and uploads. Move the quality slider and watch the real output size update live before you download.",["Upload your image.","Choose WebP or JPEG and drag the quality slider. Around 75–85% usually looks identical.","Check the size saved, then press Download."],[["How do I compress an image to under 100 KB?","Export as WebP or JPEG and lower the quality until the size shown drops below 100 KB. If needed, reduce the dimensions with the Resize tool first."],["Does compressing reduce quality?","Only slightly at sensible settings. At around 75–85% quality the loss is rarely visible while the file becomes much smaller."]]],
+crop:["Crop Image Online – Free Photo Cropper","Crop photos freehand or to 1:1, 4:5, 4:3, 16:9 and 9:16. Free, private, runs in your browser.","Drag a selection box over your photo and crop it freehand or to a fixed ratio such as 1:1, 4:5, 4:3, 16:9 or 9:16. Nothing leaves your device.",["Upload your image.","Choose a ratio, then move the box or drag a corner to resize it.","Press Apply crop and download the result."],[["How do I crop a photo to a square?","Select the 1:1 ratio, move the box over the part you want to keep and press Apply crop."],["Can I undo a crop?","Yes. Press Undo or Ctrl+Z, or use Reset to return to the original image."]]],
+rotate:["Rotate & Flip Image Online – Free Tool","Rotate images 90 degrees or flip them horizontally and vertically. Free, private, no upload.","Turn a photo 90° left or right, or mirror it horizontally or vertically, in one click. It all happens in your browser.",["Upload your image.","Tap the rotate or flip buttons until the image looks right.","Choose a format and press Download."],[["How do I fix a sideways photo?","Press the 90° rotate buttons until the photo is upright, then download it."],["Does rotating reduce quality?","A 90° turn does not lose detail. Quality only changes if you export at a lower quality setting."]]],
+filters:["Image Filters – Brightness, Contrast, Saturation, Blur & Grayscale","Adjust brightness, contrast, saturation, blur and grayscale with a live preview. Free and private.","Fine-tune brightness, contrast, saturation, blur and grayscale with a live preview, then save the result. No upload and no signup.",["Upload your image.","Drag the sliders and watch the preview change.","Press Save filters, then download."],[["How do I make an image black and white?","Drag Grayscale to 100, press Save filters and download the image."],["Are filters included in the downloaded file?","Yes. Save filters bakes them in, and the export also includes any unsaved preview."]]],
+watermark:["Add Watermark to Image Online – Free Text Watermark","Add a text watermark to your photos with custom size, opacity and position. Free and private.","Stamp your own text on a photo with custom size, opacity and position to protect product shots and artwork. Everything runs locally.",["Upload your image.","Type your text and adjust size, opacity and position.","Press Apply watermark and download."],[["How do I add a text watermark to a photo?","Type your text, adjust the size, opacity and position, press Apply watermark and download."],["Can I change the watermark afterwards?","Yes. Until you apply another edit, changing the settings replaces the watermark instead of stacking a new one."]]],
+bg:["Remove Image Background Online – Free AI Background Remover","Remove image backgrounds with AI or by color. Save a transparent PNG or WebP. Private, no upload.","Cut out people, products and pets with AI, or remove a solid background color. Save the result as a transparent PNG or WebP.",["Upload your image.","Press AI remove, or pick a background color and press Remove background. The AI model downloads once, about 40 MB.","Export as PNG or WebP to keep transparency."],[["Is my photo uploaded to remove the background?","No. The AI model is downloaded to your browser and your image is processed on your device."],["How do I get a transparent background?","Export as PNG or WebP. JPEG cannot store transparency."]]],
+convert:["Convert Image Format – WebP, JPG & PNG Converter","Convert images between WebP, JPG and PNG with adjustable quality and a live size preview. Free and private.","Convert PNG to WebP, WebP to JPG and more, with adjustable quality and a live file size preview. No upload.",["Upload your image.","Choose JPEG, PNG or WebP as the export format.","Set the quality and press Download."],[["How do I convert WebP to JPG?","Upload the WebP file, set Export format to JPEG and press Download."],["Which format is best for websites?","WebP usually gives the smallest files at similar quality. Use PNG for lossless graphics or when you need transparency in older software."]]],
+base64:["Image to Base64 Converter – Data URL for CSS & HTML","Convert an image to a Base64 data URL for CSS, HTML or email. Free and private, no upload.","Turn any image into a Base64 data URL you can paste straight into CSS, HTML or an email. The file never leaves your device.",["Upload your image.","Choose the export format and quality.","Press Copy Base64 data URL."],[["What is a Base64 data URL?","A text version of an image that you can paste directly into CSS, HTML or an email instead of linking to a file."],["Should I use Base64 for large images?","No. Base64 makes data about a third larger and cannot be cached separately, so use it only for small icons."]]]
+};
+function metaSet(title,desc,path){document.title=title;$('meta[name=description]').content=desc;const u=location.origin+path;$('link[rel=canonical]').href=u;$('meta[property="og:url"]').content=u;$('meta[property="og:title"]').content=title;$('meta[property="og:description"]').content=desc}
+function info(t){const d=T[t];$('#info').innerHTML='<h1 style="font-size:clamp(28px,4vw,40px)">'+d[0]+'</h1><p class="sub" style="margin-top:10px">'+d[2]+'</p><h2 style="font-size:26px;margin:24px 0 10px">How it works</h2><ol class="sub" style="padding-left:22px">'+d[3].map(x=>'<li>'+x+'</li>').join('')+'</ol><h2 style="font-size:26px;margin:24px 0 12px">Frequently asked questions</h2>'+d[4].map(f=>'<details><summary>'+f[0]+'</summary><p>'+f[1]+'</p></details>').join('')}
+function goPath(t){const p=PATHS[t];if(location.pathname!=p)history.pushState(null,'',p);const d=T[t];metaSet(d[0]+' | PixelForge',d[1],p);info(t)}
+function route(){const p=location.pathname.replace(/\/+$/,'')||'/',t=Object.keys(PATHS).find(k=>PATHS[k]==p);
+  if(t){if(!$('#ed').classList.contains('hidden')&&orig)setTool(t);else{resetEd();showEd(t)}}
+  else if(p=='/tools')show('tp');
+  else{if(p!='/')history.replaceState(null,'','/');show('home')}}
+addEventListener('popstate',route);
+
+"""
+rep('/* ===== NAVIGATION ===== */', BLOCK + '/* ===== NAVIGATION ===== */', 1)
+
+# show(): real URLs + meta + info toggle
+rep("function show(id){['home','tp','ed'].forEach(p=>$('#'+p).classList.toggle('hidden',p!=id));document.title=TT[id];scrollTo(0,0)}",
+    "function show(id){['home','tp','ed'].forEach(p=>$('#'+p).classList.toggle('hidden',p!=id));$('#info').classList.toggle('hidden',id!='ed');"
+    "if(id!='ed'){const p=HP[id];if(location.pathname!=p)history.pushState(null,'',p);metaSet(TT[id],id=='home'?HOME_D:TOOLS_D,p)}scrollTo(0,0)}", 1)
+# setTool(): replace hash with real path
+rep("history.replaceState(null,'','#'+t);", "goPath(t);", 1)
+# boot
+rep("resetEd();\n</script>", "resetEd();route();\n</script>", 1)
+
+open(path, "w", encoding="utf-8").write(s)
+print("OK – patched", path, "(backup:", path + ".bak)")
